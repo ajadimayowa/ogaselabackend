@@ -1,0 +1,62 @@
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import User from '../models/User';
+
+// export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
+//   const authHeader = req.headers.authorization;
+//   if (!authHeader) return res.status(401).json({ msg: 'No token' });
+
+//   try {
+//     const token = authHeader.split(' ')[1];
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+//     const user = await User.findById(decoded.id);
+//     if (!user) return res.status(403).json({ msg: 'Invalid token' });
+//     (req as any).user = user;
+//     next();
+//   } catch (err) {
+//     res.status(401).json({ msg: 'Token failed' });
+//   }
+// };
+
+export const verifyToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    res.status(401).json({ msg: 'No token provided' });
+    return;
+  }
+
+  try {
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      res.status(403).json({ msg: 'Invalid token' });
+      return;
+    }
+
+    (req as any).user = user;
+    next(); // ✅ move on to controller
+  } catch (err) {
+    res.status(401).json({ msg: 'Token failed' });
+  }
+};
+
+export const isSuperAdmin = (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user;
+  if (!user?.isSuperAdmin) {
+    res.status(403).json({ msg: 'Access denied' }) 
+    return
+};
+  next();
+};
+
+export const isCreator = (req: Request, res: Response, next: NextFunction) => {
+  const {creatorID} = req.body;
+  if (creatorID !== process.env.CREATOR_ID) {
+    res.status(403).json({success:false, message: 'Access denied' }) 
+    return
+};
+  next();
+};

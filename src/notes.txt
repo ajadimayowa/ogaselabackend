@@ -1,0 +1,18 @@
+Permision Styles for RoleBasedAccessControl
+
+"loan:create"
+
+"loan:approve"
+
+"hr:view"
+
+"accounting:edit"
+
+"create sample"
+
+{
+  "name": "HR Manager",
+  "department": "depId123",
+  "organization": "orgId123",
+  "permissions": ["hr:view", "hr:create", "hr:update"]
+}
