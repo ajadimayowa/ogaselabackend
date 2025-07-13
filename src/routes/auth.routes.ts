@@ -6,15 +6,15 @@ const router = Router();
 
 // router.post('/register-super-admin',registerSuperAdmin);
 
-router.post('/register-staff', (req, res, next) => {
+router.post('/auth/register-staff', (req, res, next) => {
   Promise.resolve(adminRegisterStaff(req, res)).catch(next);
 });
 
-router.put('/update-staff', (req, res, next) => {
+router.put('/auth/update-staff', (req, res, next) => {
   Promise.resolve(adminRegisterStaff(req, res)).catch(next);
 });
 
-router.post('/verify-email', (req, res, next) => {
+router.post('/auth/verify-email', (req, res, next) => {
   Promise.resolve(adminRegisterStaff(req, res)).catch(next);
 });
 

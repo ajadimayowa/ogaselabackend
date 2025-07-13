@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import User from '../models/User';
+import User from '../models/Staff';
 
 // export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
 //   const authHeader = req.headers.authorization;
@@ -46,16 +46,16 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
 export const isSuperAdmin = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;
   if (!user?.isSuperAdmin) {
-    res.status(403).json({ msg: 'Access denied' }) 
+    res.status(403).json({success:false, message: 'Un Authorised User!' }) 
     return
 };
   next();
 };
 
 export const isCreator = (req: Request, res: Response, next: NextFunction) => {
-  const {creatorID} = req.body;
-  if (creatorID !== process.env.CREATOR_ID) {
-    res.status(403).json({success:false, message: 'Access denied' }) 
+  const {creatorPass} = req.body;
+  if (creatorPass !== process.env.CREATOR_PASS) {
+    res.status(403).json({success:false, message: 'Un Authorised User!' }) 
     return
 };
   next();

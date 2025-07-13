@@ -4,6 +4,8 @@ import handlebars from 'handlebars';
 import path from 'path';
 import fs from 'fs';
 import moment from 'moment';
+import { IOrganisationCreationEmail, ISuperAdminCreationEmail } from '../../interfaces/email';
+import { IOrganization } from '../../models/Organization';
 
 
 interface IRoleCreationEmail {
@@ -13,22 +15,21 @@ interface IRoleCreationEmail {
   currentTime: string;
 }
 
-interface ISuperAdminCreationEmail {
-  firstName: string,
-  loginEmail: string,
-  tempPass:string,
-  userClass:string,
-  currentTime:string
-}
 
-
-
-export const sendOrgWelcomeEmail = async (nameOfOrg: string, orgEmail: string,currentTime:string) => {
+export const sendOrgWelcomeEmail = async ({nameOfOrg,orgRegNumber,orgEmail,orgPhoneNumber,orgSubscriptionPlan,currentTime,createdByName}:IOrganisationCreationEmail) => {
   const templatePath = path.join(__dirname, 'emailTemps', 'orgRegEmail.hbs');
   const templateSource = fs.readFileSync(templatePath, 'utf-8');
   // Compile the Handlebars templates
   const template = handlebars.compile(templateSource);
-  const html = template({ nameOfOrg,currentTime});
+  const html = template({
+    nameOfOrg,
+    orgRegNumber,
+    orgEmail,
+    orgPhoneNumber,
+    orgSubscriptionPlan,
+    currentTime,
+    createdByName,
+  });
   const subject = 'Succesfull Registration.'
 
   try {
@@ -39,12 +40,12 @@ export const sendOrgWelcomeEmail = async (nameOfOrg: string, orgEmail: string,cu
   }
 };
 
-export const sendDeptCreationEmail = async (nameOfOrg: string, orgEmail: string,nameOfDept:string,currentTime:string) => {
+export const sendDeptCreationEmail = async (nameOfOrg: string, orgEmail: string, nameOfDept: string, currentTime: string,createdByName:string) => {
   const templatePath = path.join(__dirname, 'emailTemps', 'departmentCreationEmail.hbs');
   const templateSource = fs.readFileSync(templatePath, 'utf-8');
   // Compile the Handlebars templates
   const template = handlebars.compile(templateSource);
-  const html = template({ nameOfOrg,currentTime,nameOfDept});
+  const html = template({ nameOfOrg, currentTime, nameOfDept,createdByName});
   const subject = 'New Department Created.'
 
   try {
@@ -56,12 +57,12 @@ export const sendDeptCreationEmail = async (nameOfOrg: string, orgEmail: string,
 };
 
 
-export const sendRoleCreationEmail = async ({nameOfOrg,currentTime,nameOfRole,orgEmail}:IRoleCreationEmail) => {
+export const sendRoleCreationEmail = async ({ nameOfOrg, currentTime, nameOfRole, orgEmail }: IRoleCreationEmail) => {
   const templatePath = path.join(__dirname, 'emailTemps', 'roleCreationEmail.hbs');
   const templateSource = fs.readFileSync(templatePath, 'utf-8');
   // Compile the Handlebars templates
   const template = handlebars.compile(templateSource);
-  const html = template({ nameOfOrg,currentTime,nameOfRole});
+  const html = template({ nameOfOrg, currentTime, nameOfRole });
   const subject = 'New Role Created.'
 
   try {
@@ -72,21 +73,22 @@ export const sendRoleCreationEmail = async ({nameOfOrg,currentTime,nameOfRole,or
   }
 };
 
-export const sendSuperAdminWelcomeEmail = 
-async ({firstName,loginEmail,tempPass,userClass}:ISuperAdminCreationEmail) => {
-  const templatePath = path.join(__dirname, 'emailTemps', 'superAdminRegEmail.hbs');
-  const templateSource = fs.readFileSync(templatePath, 'utf-8');
-  // Compile the Handlebars templates
-  const template = handlebars.compile(templateSource);
-  const html = template({firstName,loginEmail,tempPass,userClass,currentTime:moment().format('DD/MM/YYYY HH:MM A')});
-  const subject = 'Super Admin Registration.'
-  try {
-    await sendMail(loginEmail, subject, html);
-    console.log('Welcome email sent successfully!');
-  } catch (error) {
-    console.error('Error sending welcome email:', error);
-  }
-};
+export const sendSuperAdminWelcomeEmail =
+  async ({ firstName, loginEmail, tempPass, userClass, currentTime, createdByName,nameOfOrg,staffLevel }: ISuperAdminCreationEmail) => {
+    const templatePath = path.join(__dirname, 'emailTemps', 'superAdminRegEmail.hbs');
+    const templateSource = fs.readFileSync(templatePath, 'utf-8');
+    // Compile the Handlebars templates
+    const template = handlebars.compile(templateSource);
+    const html = template({ firstName, loginEmail, tempPass, userClass, createdByName, currentTime,nameOfOrg,staffLevel });
+    const subject = 'Super Admin Registration.'
+
+    try {
+      await sendMail(loginEmail, subject, html);
+      console.log('Welcome email sent successfully!');
+    } catch (error) {
+      console.error('Error sending welcome email:', error);
+    }
+  };
 
 
 export const sendWelcomeEmail = async (firstName: string, userEmail: string, verifyEMailOtpCode: string) => {
@@ -158,7 +160,7 @@ export const sendLoginOtpEmail = async (firstName: string, userEmail: string, lo
   const templateSource = fs.readFileSync(templatePath, 'utf-8');
   // Compile the Handlebars templates
   const template = handlebars.compile(templateSource);
-  const html = template({ firstName, loginOtp });
+  const html = template({ firstName, loginOtp});
   const subject = 'Login Otp!'
 
   try {
@@ -174,7 +176,7 @@ export const sendLoginNotificationEmail = async (firstName: string, userEmail: s
   const templateSource = fs.readFileSync(templatePath, 'utf-8');
   // Compile the Handlebars templates
   const template = handlebars.compile(templateSource);
-  const html = template({ firstName});
+  const html = template({ firstName });
   const subject = 'Login notification!'
 
   try {
@@ -200,6 +202,7 @@ export const sendUserVerifiedEmail = async (fullName: string, userEmail: string,
     console.error('Error sending login email:', error);
   }
 };
+
 
 
 

@@ -4,11 +4,11 @@ import { verifyToken, isSuperAdmin, isCreator } from '../middleware/auth.middlew
 
 const router = Router();
 
-router.post('/create',isCreator,  createOrganization);
-router.put('/organization/:orgId', updateOrganization);
-router.get('/organization/:orgId', getOrganizationById);
-router.delete('/organization/:orgId', deleteOrganization);
+router.post('/org/create',isCreator,  createOrganization);
+router.put('/org/organization/:orgId',isCreator, updateOrganization);
+router.get('/org/organization/:orgId',isCreator, getOrganizationById);
+router.delete('/org/organization/:orgId',isCreator, deleteOrganization);
 
-router.post('/staff', verifyToken, isSuperAdmin, onboardStaff);
+router.post('/org/staff', verifyToken, isSuperAdmin, onboardStaff);
 
 export default router;

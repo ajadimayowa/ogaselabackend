@@ -1,19 +1,19 @@
 import mongoose, { Document } from 'mongoose';
 
 export interface IRole extends Document {
-  name: string;
-  department: mongoose.Types.ObjectId;
+  roleName: string;
+  roleDepartment: mongoose.Types.ObjectId;
   organization: mongoose.Types.ObjectId;
-  permissions: string[];
-  createdBy: {
-    createdByName: string;
-    createdById: string;
+  rolePermissions: string[];
+  roleCreatedBy: {
+    roleCreatedByName: string;
+    roleCreatedById: string;
   };
   isApproved?: boolean;
   isDisabled?: boolean;
-  approvedBy?: {
-    approvedByName: string;
-    approvedById: string;
+  roleApprovedBy?: {
+    roleApprovedByName: string;
+    roleApprovedById: string;
   };
-  description: string;
+  roleDescription: string;
 }

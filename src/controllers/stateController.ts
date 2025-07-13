@@ -5,9 +5,9 @@ import { statesData } from '../constants/states';
 // Get all states
 export const getStates = async (req: Request, res: Response): Promise<any> => {
     try {
-        return res.status(200).json(statesData);
+        return res.status(200).json({success: true, payload: statesData});
     } catch (error) {
-        return res.status(500).json({ message: 'Error fetching states', error });
+        return res.status(500).json({success: false, message: 'Error fetching states', error:error });
     }
 };
 
@@ -21,8 +21,8 @@ export const getLocalGovernments = async (req: Request, res: Response): Promise<
             return res.status(404).json({ message: 'State not found' });
         }
 
-        return res.status(200).json(state.localGovernmentAreas);
+        return res.status(200).json({success: true, payload: state.localGovernmentAreas});
     } catch (error) {
-        return res.status(500).json({ message: 'Error fetching local governments', error });
+        return res.status(500).json({success: false, error:error });
     }
 };

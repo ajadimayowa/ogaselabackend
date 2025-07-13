@@ -2,7 +2,9 @@ import mongoose, { Schema, model } from 'mongoose';
 import { IDepartment } from '../interfaces/department.interface'; // Adjust path as needed
 
 const departmentSchema = new Schema<IDepartment>({
-  name: { type: String, required: true },
+  nameOfOrg: { type: String, required: true },
+  nameOfDep: { type: String, required: true },
+  orgEmail: { type: String, required: true },
   organization: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
   createdBy: {
     createdByName: { type: String, required: true },

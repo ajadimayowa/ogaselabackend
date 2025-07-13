@@ -1,7 +1,9 @@
 import mongoose, { Document } from 'mongoose';
 
 export interface IDepartment extends Document {
-  name: string;
+  nameOfOrg: string;
+  orgEmail: string;
+  nameOfDep: string;
   organization: mongoose.Types.ObjectId;
   createdBy: {
     createdByName: string;

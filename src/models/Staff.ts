@@ -45,7 +45,7 @@ export interface IStaff extends Document {
   roles: Types.ObjectId[];
   homeAddress: string;
   lga: string;
-  state: number;
+  state: string;
   phoneNumber: number;
   emailOtp?: string;
   loginOtp?: string;
@@ -84,11 +84,12 @@ export interface IStaff extends Document {
     dateApproved?: Date;
   };
   userClass: 'initiator' | 'authorizer' | 'user';
+  staffLevel: 'super-admin'|'approver'|'marketer'|'branch-manager'|'creator'
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-const userSchema: Schema = new Schema({
+const staffSchema: Schema = new Schema({
   fullName: { type: String, required: true },
   firstName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -98,8 +99,8 @@ const userSchema: Schema = new Schema({
   roles: [{ type: Schema.Types.ObjectId, ref: 'Role' }],
   homeAddress: { type: String, required: true },
   lga: { type: String, required: true },
-  state: { type: Number, required: true },
-  phoneNumber: { type: Number, required: true, unique: true },
+  state: { type: String, required: true },
+  phoneNumber: { type: Number, required: true, unique: true, sparse: true },
   emailOtp: { type: String },
   loginOtp: { type: String },
   emailIsVerified: { type: Boolean, default: false },
@@ -115,7 +116,7 @@ const userSchema: Schema = new Schema({
     homeAddress: { type: String },
     lga: { type: Number },
     state: { type: Number },
-    phoneNumber: { type: Number, unique: true },
+    nokPhoneNumber: { type: Number},
     passportPhotograph: { type: String },
     verificationIdType: {
       type: String,
@@ -146,7 +147,11 @@ const userSchema: Schema = new Schema({
     type: String,
     required: true,
     enum: ['initiator', 'authorizer', 'user'],
-    default: 'user'
+  },
+  staffLevel: {
+    type: String,
+    required: true,
+    enum: ['super-admin', 'approver', 'marketer','branch-manager','creator'],
   }
 },
   {
@@ -160,5 +165,5 @@ const userSchema: Schema = new Schema({
       }
     }
   })
-
-export default mongoose.model<IStaff>('User', userSchema);
+staffSchema.index({ 'staffNok.nokPhoneNumber': 1 }, { unique: true, sparse: true });
+export default mongoose.model<IStaff>('Staffs', staffSchema);

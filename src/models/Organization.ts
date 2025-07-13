@@ -1,11 +1,18 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IOrganization extends Document {
-  name: string;
-  email: string;
-  address?: string;
-  phoneNumber?: string;
-  subscriptionPlan?: 'free' | 'basic' | 'pro';
+  nameOfOrg: string;
+  orgEmail: string;
+  orgAddress: string;
+  orgLga: string;
+  orgState: string;
+  orgPhoneNumber: number;
+  createdByName:string;
+  createdByEmail: string;
+  updatedBy?: string;
+  isDisabled?: boolean;
+  isDeleted?: boolean;
+  orgSubscriptionPlan?: 'basic' | 'standard' | 'pro';
   orgRegNumber:string;
   organisationLogo?: string;
   organisationPrimaryColor?: string;
@@ -13,16 +20,23 @@ export interface IOrganization extends Document {
 }
 
 const organizationSchema = new Schema<IOrganization>({
-  name: { type: String, required: true},
-  email: { type: String, required: true,unique: true},
-  phoneNumber: { type: String, required: true },
-  address: {type:String,required: true },
+  nameOfOrg: { type: String, required: true},
+  orgEmail: { type: String, required: true,unique: true},
+  orgPhoneNumber: { type: Number, required: true },
+  orgAddress: {type:String,required: true },
+  orgLga: {type:String,required: true },
+  orgState: {type:String,required: true },
   orgRegNumber:{type:String,required: true },
-  subscriptionPlan: {
+  createdByName: { type: String, required: true },
+  createdByEmail: { type: String, required: true },
+  updatedBy: { type: Schema.Types.ObjectId, ref: 'Users' },
+  isDisabled: { type: Boolean, default: false },
+  isDeleted: { type: Boolean, default: false },
+  orgSubscriptionPlan: {
     type: String,
     required:true,
-    enum: ['free', 'basic', 'pro'],
-    default: 'free'
+    enum: ['basic','standard','pro'],
+    default: 'basic'
   },
   organisationLogo: {type:String},
   organisationPrimaryColor: {type:String},

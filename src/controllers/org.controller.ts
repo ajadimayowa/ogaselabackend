@@ -1,31 +1,66 @@
 import { NextFunction, Request, Response } from 'express';
 import Organization from '../models/Organization';
-import User from '../models/User';
+import User from '../models/Staff';
 import bcrypt from 'bcryptjs';
 import { sendOrgWelcomeEmail } from '../services/email/emailTypesHandler';
 import moment from 'moment';
+import { IOrganisationCreationEmail } from '../interfaces/email';
 
 export const createOrganization = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { name, email, address, phoneNumber, subscriptionPlan, orgRegNumber } = req.body;
+    const {
+      creatorPass,
+      nameOfOrg, 
+      orgEmail,
+      orgAddress, 
+      orgLga, 
+      orgState, 
+      orgPhoneNumber, 
+      orgSubscriptionPlan,
+      orgRegNumber,
+      createdByEmail,
+      createdByName
+    } = req.body;
 
-    const exists = await Organization.findOne({ email });
+    if( !creatorPass || creatorPass !== process.env.CREATOR_PASS){
+      return res.status(400).json({ success: false, message: 'Un Authorized!' });
+    }
+    
+    const exists = await Organization.findOne({ orgEmail });
+    
     if (exists) {
       return res.status(400).json({ success: false, message: 'Organization already exists' });
     }
 
     const org = await Organization.create({
-      name,
-      email,
-      address,
-      phoneNumber,
-      subscriptionPlan,
-      orgRegNumber
+      nameOfOrg,
+      orgEmail,
+      orgAddress,
+      orgLga,
+      orgState,
+      orgPhoneNumber,
+      orgSubscriptionPlan,
+      orgRegNumber,
+      createdByName,
+      createdByEmail
     });
 
+    const orgEmailPayload: IOrganisationCreationEmail = {
+      nameOfOrg: org.nameOfOrg,
+      orgEmail: org.orgEmail,
+      orgAddress: org.orgAddress,
+      orgPhoneNumber: org.orgPhoneNumber,
+      orgSubscriptionPlan: org.orgSubscriptionPlan,
+      orgRegNumber: org.orgRegNumber,
+      organisationLogo: org.organisationLogo,
+      organisationPrimaryColor: org.organisationPrimaryColor,
+      organisationSecondaryColor: org.organisationSecondaryColor,
+      currentTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+      createdByName: 'System'
+    }
     // Send welcome email (don't block response if it fails)
     try {
-      await sendOrgWelcomeEmail(name, email,moment().format('DD/MM/YYYY HH:MM A'));
+      await sendOrgWelcomeEmail(orgEmailPayload);
     } catch (emailErr) {
       console.error('Error sending welcome email:', emailErr);
     }

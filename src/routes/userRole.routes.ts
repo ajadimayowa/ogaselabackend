@@ -4,7 +4,7 @@ import { verifyToken, isSuperAdmin } from '../middleware/auth.middleware';
 
 const router = Router();
 
-router.post('/assign', verifyToken, isSuperAdmin, assignRolesToUser);
-router.post('/remove', verifyToken, isSuperAdmin, removeRolesFromUser);
+router.post('/user-role/assign', verifyToken, isSuperAdmin, assignRolesToUser);
+router.post('/user-role/remove', verifyToken, isSuperAdmin, removeRolesFromUser);
 
 export default router;
