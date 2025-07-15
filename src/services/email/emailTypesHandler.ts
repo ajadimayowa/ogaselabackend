@@ -156,7 +156,14 @@ export const sendPasswordChangedEmail = async (fullName: string, userEmail: stri
 };
 
 export const sendLoginOtpEmail = async (firstName: string, userEmail: string, loginOtp: string) => {
-  const templatePath = path.join(__dirname, 'emailTemps', 'loginOtp.hbs');
+  const templatePath = path.join(
+  process.cwd(),
+  'src',
+  'services',
+  'email',
+  'emailTemps',
+  'loginOtp.hbs'
+);
   const templateSource = fs.readFileSync(templatePath, 'utf-8');
   // Compile the Handlebars templates
   const template = handlebars.compile(templateSource);

@@ -36,6 +36,7 @@ export interface ICreatedBy {
 }
 
 export interface IStaff extends Document {
+  id?:string,
   fullName: string;
   firstName: string;
   email: string;
@@ -159,10 +160,6 @@ const staffSchema: Schema = new Schema({
     toJSON: {
       virtuals: true,
       versionKey: false, // removes __v
-      transform: (_doc, ret) => {
-        ret.id = ret._id;  // rename _id to id
-        delete ret._id;    // remove _id
-      }
     }
   })
 staffSchema.index({ 'staffNok.nokPhoneNumber': 1 }, { unique: true, sparse: true });

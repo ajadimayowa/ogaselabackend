@@ -9,8 +9,9 @@ export const checkModuleAccess = (requiredPlan: 'basic' | 'pro') => {
       const org = await Organization.findById(user.organization);
       if (!org) return res.status(404).json({ msg: 'Organization not found' });
 
-      const plans = ['free', 'basic', 'pro'];
-      const hasAccess = plans.indexOf(org.subscriptionPlan) >= plans.indexOf(requiredPlan);
+      const plans = ['basic', 'standard', 'pro'];
+      const orgPlan = org?.orgSubscriptionPlan ?? '';
+      const hasAccess = plans.indexOf(orgPlan) >= plans.indexOf(requiredPlan);
 
       if (!hasAccess) {
         return res.status(403).json({ msg: `Access denied. ${requiredPlan} plan required.` });
