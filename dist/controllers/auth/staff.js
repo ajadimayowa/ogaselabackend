@@ -21,11 +21,19 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const emailTypesHandler_1 = require("../../services/email/emailTypesHandler");
 const Organization_1 = __importDefault(require("../../models/Organization"));
 const loginStaff = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email } = req.body;
+    const { email, password } = req.body;
     try {
         const staff = yield Staff_1.default.findOne({ email });
         if (!staff) {
             res.status(404).json({ success: false, message: 'Staff not found' });
+            return;
+        }
+        const isPasswordMatch = yield bcryptjs_1.default.compare(password, staff.password);
+        if (!isPasswordMatch) {
+            res.status(401).json({
+                success: false,
+                message: 'Wrong login credentials',
+            });
             return;
         }
         const otp = (0, otpUtils_1.generateOtp)(); // 6-digit OTP

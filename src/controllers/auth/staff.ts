@@ -10,7 +10,7 @@ import { sendLoginOtpEmail, sendResetPasswordOtpEmail } from '../../services/ema
 import Organization from '../../models/Organization';
 
 export const loginStaff = async (req: Request, res: Response) => {
-  const { email } = req.body;
+  const { email, password } = req.body;
 
   try {
     const staff = await Staff.findOne({ email });
@@ -18,6 +18,16 @@ export const loginStaff = async (req: Request, res: Response) => {
     if (!staff) {
       res.status(404).json({ success: false, message: 'Staff not found' });
       return
+    }
+
+    const isPasswordMatch = await bcrypt.compare(password, staff.password);
+
+    if (!isPasswordMatch) {
+      res.status(401).json({
+        success: false,
+        message: 'Wrong login credentials',
+      });
+      return;
     }
 
     const otp = generateOtp(); // 6-digit OTP
@@ -28,7 +38,7 @@ export const loginStaff = async (req: Request, res: Response) => {
     await staff.save();
 
     try {
-     await sendLoginOtpEmail(staff.firstName, staff.email, otp);
+      await sendLoginOtpEmail(staff.firstName, staff.email, otp);
     } catch (error) {
       console.error('Error sending OTP email:', error);
     }
@@ -36,12 +46,12 @@ export const loginStaff = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       message: 'OTP sent to email',
-      payload: {email:email}
+      payload: { email: email }
     });
-    return ;
+    return;
   } catch (error) {
     res.status(500).json({ success: false, message: 'Internal Server Error', error });
-    return 
+    return
   }
 };
 
@@ -52,12 +62,12 @@ export const verifyLoginOtp = async (req: Request, res: Response) => {
 
   try {
     const staff = await Staff.findOne({ email });
-    console.log({seeStaffHere:staff})
-    const organisation =Organization.findById(staff?.organization)
+    console.log({ seeStaffHere: staff })
+    const organisation = Organization.findById(staff?.organization)
 
     if (!staff) {
       res.status(404).json({ success: false, message: 'Staff not found' });
-      return 
+      return
     }
 
     if (
@@ -67,7 +77,7 @@ export const verifyLoginOtp = async (req: Request, res: Response) => {
       staff.loginOtpExpires < new Date()
     ) {
       res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
-      return 
+      return
     }
 
     // Clear OTP
@@ -83,20 +93,20 @@ export const verifyLoginOtp = async (req: Request, res: Response) => {
 
     const token = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
-     const organization = await Organization.findById(staff.organization);
+    const organization = await Organization.findById(staff.organization);
 
     res.status(200).json({
       success: true,
       message: 'Login successful',
-      token:token,
-      payload:{
-      staffInfo:staff,
-      organizationInfo: organization,
+      token: token,
+      payload: {
+        staffInfo: staff,
+        organizationInfo: organization,
       }
     });
     return
-  } catch (error:any) {
-   res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
     return
   }
 };
@@ -113,7 +123,7 @@ export const requestPasswordResetOtp = async (req: Request, res: Response) => {
         success: false,
         message: 'Staff with this email does not exist',
       });
-      return ;
+      return;
     }
 
     const otp = generateOtp(); // generate 6-digit OTP
@@ -140,27 +150,27 @@ export const requestPasswordResetOtp = async (req: Request, res: Response) => {
       message: 'Password reset OTP sent to email',
       payload: { email },
     });
-    return ;
+    return;
   } catch (err) {
     res.status(500).json({
       success: false,
       message: 'Internal Server Error',
       error: err,
     });
-    return ;
+    return;
   }
 };
 
 export const resetStaffPasswordWithOtp = async (req: Request, res: Response) => {
   const { email, otp, newPassword } = req.body;
-  let updatedOtp=+otp
+  let updatedOtp = +otp
 
   if (!email || !updatedOtp || !newPassword) {
     res.status(400).json({
       success: false,
       message: 'Email, OTP, and new password are required',
     });
-    return ;
+    return;
   }
 
   try {
@@ -171,7 +181,7 @@ export const resetStaffPasswordWithOtp = async (req: Request, res: Response) => 
         success: false,
         message: 'Staff not found',
       });
-      return 
+      return
     }
 
     if (
@@ -180,11 +190,11 @@ export const resetStaffPasswordWithOtp = async (req: Request, res: Response) => 
       // !staff.resetPasswordOtpExpires ||
       // staff.resetPasswordOtpExpires < new Date()
     ) {
-     res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Invalid or expired OTP',
       });
-       return;
+      return;
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -200,14 +210,14 @@ export const resetStaffPasswordWithOtp = async (req: Request, res: Response) => 
       success: true,
       message: 'Password reset successful',
     });
-    return ;
+    return;
   } catch (err) {
-   res.status(500).json({
+    res.status(500).json({
       success: false,
       message: 'Internal Server Error',
       error: err,
     });
-     return ;
+    return;
   }
 };
 
