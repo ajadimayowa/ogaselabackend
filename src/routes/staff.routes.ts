@@ -2,14 +2,17 @@ import { Router } from 'express';
 // import { register, login } from '../controllers/auth.controller';
 import { createStaff, registerSuperAdmin } from '../controllers/staff-controllers';
 import { isCreator, isSuperAdmin, verifyToken } from '../middleware/auth.middleware';
-import { loginStaff,verifyOtp } from '../controllers/auth/staff';
+import { loginStaff,requestPasswordResetOtp,resetStaffPasswordWithOtp,verifyLoginOtp} from '../controllers/auth/staff';
 
 const router = Router();
 
 router.post('/staff/create-superadmin',isCreator, registerSuperAdmin);
 router.post('/staff/create-staff',isSuperAdmin, createStaff);
 router.post('/staff/login', loginStaff);
-router.post('/staff/verify-otp', verifyOtp);
+router.post('/staff/verify-otp', verifyLoginOtp);
+router.post('/staff/request-password-reset-otp', requestPasswordResetOtp);
+router.post('/staff/reset-password-with-otp', resetStaffPasswordWithOtp);
+
 
 // router.post('/register-staff', (req, res, next) => {
 //   Promise.resolve(adminRegisterStaff(req, res)).catch(next);

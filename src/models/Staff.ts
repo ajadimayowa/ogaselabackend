@@ -50,8 +50,10 @@ export interface IStaff extends Document {
   phoneNumber: number;
   emailOtp?: string;
   loginOtp?: string;
+  resetPasswordOtp?:string,
   emailIsVerified: boolean;
   emailOtpExpires?: Date;
+  resetPasswordOtpExpires:Date;
   currentLevel?: string;
   isApproved: boolean;
   isDisabled: boolean;
@@ -104,8 +106,10 @@ const staffSchema: Schema = new Schema({
   phoneNumber: { type: Number, required: true, unique: true, sparse: true },
   emailOtp: { type: String },
   loginOtp: { type: String },
+  resetPasswordOtp: { type: String },
   emailIsVerified: { type: Boolean, default: false },
   emailOtpExpires: { type: Date },
+  resetPasswordOtpExpires: { type: Date },
   currentLevel: { type: String },
   isApproved: { type: Boolean, default: false },
   isDisabled: { type: Boolean, default: false },

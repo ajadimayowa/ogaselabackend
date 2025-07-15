@@ -9,7 +9,9 @@ const router = (0, express_1.Router)();
 router.post('/staff/create-superadmin', auth_middleware_1.isCreator, staff_controllers_1.registerSuperAdmin);
 router.post('/staff/create-staff', auth_middleware_1.isSuperAdmin, staff_controllers_1.createStaff);
 router.post('/staff/login', staff_1.loginStaff);
-router.post('/staff/verify-otp', staff_1.verifyOtp);
+router.post('/staff/verify-otp', staff_1.verifyLoginOtp);
+router.post('/staff/request-password-reset-otp', staff_1.requestPasswordResetOtp);
+router.post('/staff/reset-password-with-otp', staff_1.resetStaffPasswordWithOtp);
 // router.post('/register-staff', (req, res, next) => {
 //   Promise.resolve(adminRegisterStaff(req, res)).catch(next);
 // });
