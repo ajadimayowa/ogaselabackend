@@ -49,7 +49,15 @@ export const sendOrgWelcomeEmail = async ({nameOfOrg,orgRegNumber,orgEmail,orgPh
 };
 
 export const sendDeptCreationEmail = async (nameOfOrg: string, orgEmail: string, nameOfDept: string, currentTime: string,createdByName:string) => {
-  const templatePath = path.join(__dirname, 'emailTemps', 'departmentCreationEmail.hbs');
+  const templatePath = path.join(
+  process.cwd(),
+  'src',
+  'services',
+  'email',
+  'emailTemps',
+  'departmentCreationEmail.hbs'
+);
+  
   const templateSource = fs.readFileSync(templatePath, 'utf-8');
   // Compile the Handlebars templates
   const template = handlebars.compile(templateSource);

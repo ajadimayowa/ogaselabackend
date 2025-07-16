@@ -43,7 +43,7 @@ const sendOrgWelcomeEmail = (_a) => __awaiter(void 0, [_a], void 0, function* ({
 });
 exports.sendOrgWelcomeEmail = sendOrgWelcomeEmail;
 const sendDeptCreationEmail = (nameOfOrg, orgEmail, nameOfDept, currentTime, createdByName) => __awaiter(void 0, void 0, void 0, function* () {
-    const templatePath = path_1.default.join(__dirname, 'emailTemps', 'departmentCreationEmail.hbs');
+    const templatePath = path_1.default.join(process.cwd(), 'src', 'services', 'email', 'emailTemps', 'departmentCreationEmail.hbs');
     const templateSource = fs_1.default.readFileSync(templatePath, 'utf-8');
     // Compile the Handlebars templates
     const template = handlebars_1.default.compile(templateSource);
