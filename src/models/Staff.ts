@@ -60,6 +60,7 @@ export interface IStaff extends Document {
   loginOtpExpires?: Date;
   isPasswordUpdated: boolean;
   isSuperAdmin: boolean;
+  isCreator: boolean;
   staffNok?: {
     fullName?: string;
     homeAddress?: string;
@@ -116,6 +117,7 @@ const staffSchema: Schema = new Schema({
   loginOtpExpires: { type: Date },
   isPasswordUpdated: { type: Boolean, default: false },
   isSuperAdmin: { type: Boolean, default: false },
+  isCreator: { type: Boolean, default: false },
   staffNok: {
     fullName: { type: String },
     homeAddress: { type: String },

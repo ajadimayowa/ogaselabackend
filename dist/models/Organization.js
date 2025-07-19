@@ -37,7 +37,7 @@ const mongoose_1 = __importStar(require("mongoose"));
 const organizationSchema = new mongoose_1.Schema({
     nameOfOrg: { type: String, required: true },
     orgEmail: { type: String, required: true, unique: true },
-    orgPhoneNumber: { type: Number, required: true },
+    orgPhoneNumber: { type: String, required: true }, // changed to string for flexibility
     orgAddress: { type: String, required: true },
     orgLga: { type: String, required: true },
     orgState: { type: String, required: true },
@@ -49,22 +49,21 @@ const organizationSchema = new mongoose_1.Schema({
     isDeleted: { type: Boolean, default: false },
     orgSubscriptionPlan: {
         type: String,
-        required: true,
         enum: ['basic', 'standard', 'pro'],
-        default: 'basic'
+        default: 'basic',
     },
     organisationLogo: { type: String },
     organisationPrimaryColor: { type: String },
-    organisationSecondaryColor: { type: String }
+    organisationSecondaryColor: { type: String },
 }, {
     timestamps: true,
     toJSON: {
         virtuals: true,
-        versionKey: false, // removes __v
+        versionKey: false,
         transform: (_doc, ret) => {
-            ret.id = ret._id; // rename _id to id
-            delete ret._id; // remove _id
-        }
-    }
+            ret.id = ret._id;
+            delete ret._id;
+        },
+    },
 });
 exports.default = mongoose_1.default.model('Organizations', organizationSchema);

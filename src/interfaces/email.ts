@@ -2,7 +2,7 @@ export interface IOrganisationCreationEmail {
   nameOfOrg: string;
   orgEmail: string;
   orgAddress?: string;
-  orgPhoneNumber?: number;
+  orgPhoneNumber?: number | string;
   orgSubscriptionPlan?: 'basic' | 'standard' | 'pro';
   orgRegNumber: string;
   organisationLogo?: string;

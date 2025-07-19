@@ -65,6 +65,7 @@ const staffSchema = new mongoose_1.Schema({
     loginOtpExpires: { type: Date },
     isPasswordUpdated: { type: Boolean, default: false },
     isSuperAdmin: { type: Boolean, default: false },
+    isCreator: { type: Boolean, default: false },
     staffNok: {
         fullName: { type: String },
         homeAddress: { type: String },

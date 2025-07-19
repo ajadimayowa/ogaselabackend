@@ -20,21 +20,21 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const emailTypesHandler_1 = require("../../services/email/emailTypesHandler");
 const Organization_1 = __importDefault(require("../../models/Organization"));
+const Department_model_1 = require("../../models/Department.model");
+const Role_1 = __importDefault(require("../../models/Role"));
 const loginStaff = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     try {
-        const staff = yield Staff_1.default.findOne({ email });
-        if (!staff) {
-            res.status(404).json({ success: false, message: 'Staff not found' });
-            return;
-        }
-        const isPasswordMatch = yield bcryptjs_1.default.compare(password, staff.password);
-        if (!isPasswordMatch) {
-            res.status(401).json({
+        const normalizedEmail = email.trim().toLowerCase();
+        const staff = yield Staff_1.default.findOne({ email: normalizedEmail });
+        // To prevent timing attacks, run bcrypt.compare even if user doesn't exist
+        const dummyHash = "$2b$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+        const isPasswordMatch = yield bcryptjs_1.default.compare(password, (staff === null || staff === void 0 ? void 0 : staff.password) || dummyHash);
+        if (!staff || !isPasswordMatch) {
+            return res.status(401).json({
                 success: false,
-                message: 'Wrong login credentials',
+                message: 'Invalid credentials',
             });
-            return;
         }
         const otp = (0, otpUtils_1.generateOtp)(); // 6-digit OTP
         const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
@@ -47,16 +47,22 @@ const loginStaff = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         catch (error) {
             console.error('Error sending OTP email:', error);
         }
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: 'OTP sent to email',
-            payload: { email: email }
+            payload: {
+                email: staff.email,
+                expiresAt: otpExpires,
+            },
         });
-        return;
     }
     catch (error) {
-        res.status(500).json({ success: false, message: 'Internal Server Error', error });
-        return;
+        console.error('Login error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal Server Error',
+            error,
+        });
     }
 });
 exports.loginStaff = loginStaff;
@@ -64,9 +70,9 @@ const verifyLoginOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const { email, otp } = req.body;
     // console.log({email, otp});
     try {
-        const staff = yield Staff_1.default.findOne({ email });
+        const staff = yield Staff_1.default.findOne({ email: email.trim().toLowerCase() });
         console.log({ seeStaffHere: staff });
-        const organisation = Organization_1.default.findById(staff === null || staff === void 0 ? void 0 : staff.organization);
+        // const organisation = Organization.findById(staff?.organization)
         if (!staff) {
             res.status(404).json({ success: false, message: 'Staff not found' });
             return;
@@ -89,13 +95,60 @@ const verifyLoginOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
         };
         const token = jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
         const organization = yield Organization_1.default.findById(staff.organization);
+        const staffDepartment = yield Department_model_1.Department.findById(staff.department);
+        const staffRole = yield Role_1.default.findById(staff.roles[0]);
+        let staffData = {
+            id: staff === null || staff === void 0 ? void 0 : staff._id,
+            fullName: staff === null || staff === void 0 ? void 0 : staff.fullName,
+            firstName: staff === null || staff === void 0 ? void 0 : staff.firstName,
+            department: staff === null || staff === void 0 ? void 0 : staff.department,
+            staffLevel: staff === null || staff === void 0 ? void 0 : staff.staffLevel,
+            staffNokInformation: staff === null || staff === void 0 ? void 0 : staff.staffNok,
+            staffKycInformation: staff === null || staff === void 0 ? void 0 : staff.staffKyc,
+            homeAddress: staff === null || staff === void 0 ? void 0 : staff.homeAddress,
+            phoneNumber: `0${staff === null || staff === void 0 ? void 0 : staff.phoneNumber}`,
+            isApproved: staff === null || staff === void 0 ? void 0 : staff.isApproved,
+            isDisabled: staff.isDisabled,
+            emailIsVerified: staff === null || staff === void 0 ? void 0 : staff.emailIsVerified,
+            isCreator: staff === null || staff === void 0 ? void 0 : staff.isCreator,
+            isSuperAdmin: staff === null || staff === void 0 ? void 0 : staff.isSuperAdmin,
+            isPasswordUpdated: staff === null || staff === void 0 ? void 0 : staff.isPasswordUpdated,
+            lga: staff === null || staff === void 0 ? void 0 : staff.lga,
+            state: staff === null || staff === void 0 ? void 0 : staff.state,
+            createdAt: organization === null || organization === void 0 ? void 0 : organization.createdAt,
+            updatedAt: organization === null || organization === void 0 ? void 0 : organization.updatedAt,
+        };
+        let organisationData = {
+            id: organization === null || organization === void 0 ? void 0 : organization._id,
+            nameOfOrg: organization === null || organization === void 0 ? void 0 : organization.nameOfOrg,
+            orgEmail: organization === null || organization === void 0 ? void 0 : organization.orgEmail,
+            orgAddress: organization === null || organization === void 0 ? void 0 : organization.orgAddress,
+            orgLga: organization === null || organization === void 0 ? void 0 : organization.orgLga,
+            orgState: organization === null || organization === void 0 ? void 0 : organization.orgState,
+            orgPhoneNumber: `0${organization === null || organization === void 0 ? void 0 : organization.orgPhoneNumber}`,
+            orgSubscriptionPlan: organization === null || organization === void 0 ? void 0 : organization.orgSubscriptionPlan,
+            orgRegNumber: organization === null || organization === void 0 ? void 0 : organization.orgRegNumber,
+            createdAt: organization === null || organization === void 0 ? void 0 : organization.createdAt,
+            updatedAt: organization === null || organization === void 0 ? void 0 : organization.updatedAt
+        };
+        let staffDepartmentData = {
+            id: staffDepartment === null || staffDepartment === void 0 ? void 0 : staffDepartment.id,
+            nameofDept: staffDepartment === null || staffDepartment === void 0 ? void 0 : staffDepartment.nameOfDep,
+        };
+        let staffRoleData = {
+            id: staffRole === null || staffRole === void 0 ? void 0 : staffRole.id,
+            nameofRole: staffRole === null || staffRole === void 0 ? void 0 : staffRole.roleName,
+            staffPermisions: staffRole === null || staffRole === void 0 ? void 0 : staffRole.rolePermissions
+        };
         res.status(200).json({
             success: true,
             message: 'Login successful',
-            token: token,
             payload: {
-                staffInfo: staff,
-                organizationInfo: organization,
+                token: token,
+                staffData,
+                organisationData,
+                staffDepartmentData,
+                staffRoleData
             }
         });
         return;

@@ -8,26 +8,35 @@ import bcrypt from 'bcryptjs';
 import { sendLoginOtpEmail, sendResetPasswordOtpEmail } from '../../services/email/emailTypesHandler';
 
 import Organization from '../../models/Organization';
+import { Department } from '../../models/Department.model';
+import Role from '../../models/Role';
 
-export const loginStaff = async (req: Request, res: Response) => {
+export interface IApiResponse<T = any> {
+  data: {
+    success: boolean;
+    message: string;
+    payload?: T;
+  },
+  status:any
+
+}
+
+export const loginStaff = async (req: Request, res: Response): Promise<any> => {
   const { email, password } = req.body;
 
   try {
-    const staff = await Staff.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const staff = await Staff.findOne({ email: normalizedEmail });
 
-    if (!staff) {
-      res.status(404).json({ success: false, message: 'Staff not found' });
-      return
-    }
+    // To prevent timing attacks, run bcrypt.compare even if user doesn't exist
+    const dummyHash = "$2b$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+    const isPasswordMatch = await bcrypt.compare(password, staff?.password || dummyHash);
 
-    const isPasswordMatch = await bcrypt.compare(password, staff.password);
-
-    if (!isPasswordMatch) {
-      res.status(401).json({
+    if (!staff || !isPasswordMatch) {
+      return res.status(401).json({
         success: false,
-        message: 'Wrong login credentials',
+        message: 'Invalid credentials',
       });
-      return;
     }
 
     const otp = generateOtp(); // 6-digit OTP
@@ -43,15 +52,22 @@ export const loginStaff = async (req: Request, res: Response) => {
       console.error('Error sending OTP email:', error);
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'OTP sent to email',
-      payload: { email: email }
+      payload: {
+        email: staff.email,
+        expiresAt: otpExpires,
+      },
     });
-    return;
+
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Internal Server Error', error });
-    return
+    console.error('Login error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+      error,
+    });
   }
 };
 
@@ -61,9 +77,9 @@ export const verifyLoginOtp = async (req: Request, res: Response) => {
   // console.log({email, otp});
 
   try {
-    const staff = await Staff.findOne({ email });
+    const staff = await Staff.findOne({ email: email.trim().toLowerCase() });
     console.log({ seeStaffHere: staff })
-    const organisation = Organization.findById(staff?.organization)
+    // const organisation = Organization.findById(staff?.organization)
 
     if (!staff) {
       res.status(404).json({ success: false, message: 'Staff not found' });
@@ -94,14 +110,64 @@ export const verifyLoginOtp = async (req: Request, res: Response) => {
     const token = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
     const organization = await Organization.findById(staff.organization);
+    const staffDepartment = await Department.findById(staff.department);
+    const staffRole = await Role.findById(staff.roles[0]);
+
+    let staffData = {
+      id: staff?._id,
+      fullName: staff?.fullName,
+      firstName: staff?.firstName,
+      department: staff?.department,
+      staffLevel:staff?.staffLevel,
+      staffNokInformation:staff?.staffNok,
+      staffKycInformation:staff?.staffKyc,
+      homeAddress:staff?.homeAddress,
+      phoneNumber:`0${staff?.phoneNumber}`,
+      isApproved:staff?.isApproved,
+      isDisabled:staff.isDisabled,
+      emailIsVerified:staff?.emailIsVerified,
+      isCreator:staff?.isCreator,
+      isSuperAdmin:staff?.isSuperAdmin,
+      isPasswordUpdated:staff?.isPasswordUpdated,
+      lga:staff?.lga,
+      state:staff?.state,
+      createdAt: organization?.createdAt,
+      updatedAt: organization?.updatedAt,
+    };
+    let organisationData = {
+      id: organization?._id,
+      nameOfOrg: organization?.nameOfOrg,
+      orgEmail: organization?.orgEmail,
+      orgAddress: organization?.orgAddress,
+      orgLga: organization?.orgLga,
+      orgState: organization?.orgState,
+      orgPhoneNumber: `0${organization?.orgPhoneNumber}`,
+      orgSubscriptionPlan: organization?.orgSubscriptionPlan,
+      orgRegNumber: organization?.orgRegNumber,
+      createdAt: organization?.createdAt,
+      updatedAt: organization?.updatedAt
+    }
+    let staffDepartmentData = {
+      id: staffDepartment?.id,
+      nameofDept: staffDepartment?.nameOfDep,
+
+    }
+
+    let staffRoleData = {
+      id: staffRole?.id,
+      nameofRole: staffRole?.roleName,
+      staffPermisions: staffRole?.rolePermissions
+    }
 
     res.status(200).json({
       success: true,
       message: 'Login successful',
-      token: token,
       payload: {
-        staffInfo: staff,
-        organizationInfo: organization,
+        token: token,
+        staffData,
+        organisationData,
+        staffDepartmentData,
+        staffRoleData
       }
     });
     return
