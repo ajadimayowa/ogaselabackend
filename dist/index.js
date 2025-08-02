@@ -15,6 +15,7 @@ const userRole_routes_1 = __importDefault(require("./routes/userRole.routes"));
 const department_routes_1 = __importDefault(require("./routes/department.routes"));
 const staff_routes_1 = __importDefault(require("./routes/staff.routes"));
 const stateRoutes_1 = __importDefault(require("./routes/stateRoutes"));
+const branch_routes_1 = __importDefault(require("./routes/branch-routes/branch.routes"));
 dotenv_1.default.config();
 // Connect to DB
 (0, db_1.default)().catch((err) => {
@@ -33,6 +34,7 @@ app.use(express_1.default.json());
 const apiPrefix = '/api/v1/';
 // Routes
 app.use(apiPrefix, org_routes_1.default);
+app.use(apiPrefix, branch_routes_1.default);
 app.use(apiPrefix, department_routes_1.default);
 app.use(apiPrefix, role_routes_1.default);
 app.use(apiPrefix, staff_routes_1.default);

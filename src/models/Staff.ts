@@ -114,6 +114,7 @@ const staffSchema: Schema = new Schema({
   currentLevel: { type: String },
   isApproved: { type: Boolean, default: false },
   isDisabled: { type: Boolean, default: false },
+  isDeleted: { type: Boolean, default: false },
   loginOtpExpires: { type: Date },
   isPasswordUpdated: { type: Boolean, default: false },
   isSuperAdmin: { type: Boolean, default: false },
@@ -121,9 +122,9 @@ const staffSchema: Schema = new Schema({
   staffNok: {
     fullName: { type: String },
     homeAddress: { type: String },
-    lga: { type: Number },
-    state: { type: Number },
-    nokPhoneNumber: { type: Number},
+    lga: { type: String },
+    state: { type: String },
+    nokPhoneNumber: { type: String },
     passportPhotograph: { type: String },
     verificationIdType: {
       type: String,
@@ -146,8 +147,8 @@ const staffSchema: Schema = new Schema({
     dateCreated: { type: Date, default: Date.now }, // Default to current date
   },
   approvedBy: {
-    approvedByName: { type: String, required: true },
-    approvedById: { type: String, required: true },
+    approvedByName: { type: String},
+    approvedById: { type: String},
     dateApproved: { type: Date, default: Date.now }, // Default to current date
   },
   userClass: {

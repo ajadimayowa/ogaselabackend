@@ -143,14 +143,16 @@ export const a= async (req: Request, res: Response) => {
 export const createDepartment = async (req: Request, res: Response) => {
 
   try {
-    const { nameOfOrg,orgEmail,nameOfDep, organization, createdByName, isApproved, createdById, approvedByName, approvedById, description, creatorId } = req.body;
+    const { nameOfOrg,orgEmail,nameOfDep, organization, createdByName,createdById,approvedById, description} = req.body;
 
-    if (creatorId != process.env.CREATOR_ID) {
+    if (!createdById) {
       res.status(401).json({ success: false, message: 'Un Authorised Access' });
+      return ;
     }
-    const exists = await Department.findOne({ name });
+    const exists = await Department.findOne({ nameOfDep });
     if (exists) {
       res.status(400).json({ success: false, message: 'Department already exists' });
+      return ;
     }
     const dept: Partial<IDepartment> = await Department.create({
       nameOfOrg,
@@ -162,10 +164,8 @@ export const createDepartment = async (req: Request, res: Response) => {
         createdById
       },
       approvedBy: {
-        approvedByName,
         approvedById
       },
-      isApproved,
       description,
     });
 
@@ -191,9 +191,14 @@ export const getDepartmentsByOrganizationId = async (req: Request, res: Response
       res.status(404).json({ message: 'No departments found for this organization.' });
     }
 
-    res.status(200).json(departments);
+    let depts = departments.map((depts)=>({
+      value:depts._id,
+      label:depts.nameOfDep
+    }))
+
+    res.status(200).json({success:true,payload:depts});
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching departments by organization ID', error });
+    res.status(500).json({success:false, message: 'Error fetching departments by organization ID', payload:error });
   }
 };
 

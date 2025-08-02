@@ -123,13 +123,15 @@ const a = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.a = a;
 const createDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { nameOfOrg, orgEmail, nameOfDep, organization, createdByName, isApproved, createdById, approvedByName, approvedById, description, creatorId } = req.body;
-        if (creatorId != process.env.CREATOR_ID) {
+        const { nameOfOrg, orgEmail, nameOfDep, organization, createdByName, createdById, approvedById, description } = req.body;
+        if (!createdById) {
             res.status(401).json({ success: false, message: 'Un Authorised Access' });
+            return;
         }
-        const exists = yield Department_model_1.Department.findOne({ name });
+        const exists = yield Department_model_1.Department.findOne({ nameOfDep });
         if (exists) {
             res.status(400).json({ success: false, message: 'Department already exists' });
+            return;
         }
         const dept = yield Department_model_1.Department.create({
             nameOfOrg,
@@ -141,10 +143,8 @@ const createDepartment = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 createdById
             },
             approvedBy: {
-                approvedByName,
                 approvedById
             },
-            isApproved,
             description,
         });
         // Send welcome email (don't block response if it fails)
@@ -169,10 +169,14 @@ const getDepartmentsByOrganizationId = (req, res) => __awaiter(void 0, void 0, v
         if (!departments || departments.length === 0) {
             res.status(404).json({ message: 'No departments found for this organization.' });
         }
-        res.status(200).json(departments);
+        let depts = departments.map((depts) => ({
+            value: depts._id,
+            label: depts.nameOfDep
+        }));
+        res.status(200).json({ success: true, payload: depts });
     }
     catch (error) {
-        res.status(500).json({ message: 'Error fetching departments by organization ID', error });
+        res.status(500).json({ success: false, message: 'Error fetching departments by organization ID', payload: error });
     }
 });
 exports.getDepartmentsByOrganizationId = getDepartmentsByOrganizationId;

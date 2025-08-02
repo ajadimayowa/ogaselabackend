@@ -17,12 +17,12 @@ const nodemailer_1 = __importDefault(require("nodemailer"));
 const sendMail = (userEmail, subject, html) => __awaiter(void 0, void 0, void 0, function* () {
     const transporter = nodemailer_1.default.createTransport({
         host: process.env.BREVO_SMTP_HOST, // Brevo SMTP host
-        port: parseInt('587'), // Use 587 for TLS
+        port: parseInt('465'), // Use 587 for TLS
         auth: {
             user: process.env.BREVO_USERNAME, // Your Brevo SMTP username (API key)
             pass: process.env.BREVO_PASSWORD // Your Brevo API key (same as username)
         },
-        secure: false, // Use TLS
+        secure: true, // Use TLS
     });
     const mailerOptions = {
         from: '"BCKash" <hello@floatsolutionhub.com>', // Sender address

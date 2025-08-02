@@ -4,7 +4,7 @@ import handlebars from 'handlebars';
 import path from 'path';
 import fs from 'fs';
 import moment from 'moment';
-import { IOrganisationCreationEmail, ISuperAdminCreationEmail } from '../../interfaces/email';
+import { IOrganisationCreationEmail, IStaffCreationEmail, ISuperAdminCreationEmail } from '../../interfaces/email';
 import { IOrganization } from '../../models/Organization';
 
 
@@ -45,6 +45,30 @@ export const sendOrgWelcomeEmail = async ({nameOfOrg,orgRegNumber,orgEmail,orgPh
     console.log('Welcome email sent successfully!');
   } catch (error) {
     console.error('Error sending welcome email:', error);
+  }
+};
+
+export const sendBranchCreationEmail = async (nameOfOrg: string, orgEmail: string, nameOfDept: string, currentTime: string,createdByName:string) => {
+  const templatePath = path.join(
+  process.cwd(),
+  'src',
+  'services',
+  'email',
+  'emailTemps',
+  'branchCreationEmail.hbs'
+);
+  
+  const templateSource = fs.readFileSync(templatePath, 'utf-8');
+  // Compile the Handlebars templates
+  const template = handlebars.compile(templateSource);
+  const html = template({ nameOfOrg, currentTime, nameOfDept,createdByName});
+  const subject = 'New Branch Created.'
+
+  try {
+    await sendMail(orgEmail, subject, html);
+    console.log('email sent successfully!');
+  } catch (error) {
+    console.error('Error email:', error);
   }
 };
 
@@ -120,6 +144,33 @@ export const sendSuperAdminWelcomeEmail =
       console.error('Error sending welcome email:', error);
     }
   };
+
+  export const sendStaffWelcomeEmail =
+  async ({ firstName, loginEmail, tempPass, userClass, currentTime,nameOfOrg,staffLevel }: IStaffCreationEmail) => {
+    const templatePath = path.join(
+  process.cwd(),
+  'src',
+  'services',
+  'email',
+  'emailTemps',
+  'superAdminRegEmail.hbs'
+);
+   
+    const templateSource = fs.readFileSync(templatePath, 'utf-8');
+    // Compile the Handlebars templates
+    const template = handlebars.compile(templateSource);
+    const html = template({ firstName, loginEmail, tempPass, userClass,currentTime,nameOfOrg,staffLevel });
+    const subject = 'Super Admin Registration.'
+
+    try {
+      await sendMail(loginEmail, subject, html);
+      console.log('Welcome email sent successfully!');
+    } catch (error) {
+      console.error('Error sending welcome email:', error);
+    }
+  };
+
+  
 
 
 export const sendWelcomeEmail = async (firstName: string, userEmail: string, verifyEMailOtpCode: string) => {

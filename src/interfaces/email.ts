@@ -52,10 +52,8 @@ export interface IStaffCreationEmail {
   firstName: string,
   loginEmail: string,
   tempPass: string,
-  createdByName: string;
-  createdByEmail: string;
-  approvedByName: string;
-  approvedByEmail: string;
   userClass: string,
-  currentTime: string
+  staffLevel: string,
+  currentTime: string,
+  nameOfOrg: string
 }

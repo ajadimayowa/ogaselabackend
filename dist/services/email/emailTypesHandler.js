@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendUserVerifiedEmail = exports.sendLoginNotificationEmail = exports.sendResetPasswordOtpEmail = exports.sendLoginOtpEmail = exports.sendPasswordChangedEmail = exports.sendPasswordResetEmail = exports.sendProfileUpdateEmail = exports.sendWelcomeEmail = exports.sendSuperAdminWelcomeEmail = exports.sendRoleCreationEmail = exports.sendDeptCreationEmail = exports.sendOrgWelcomeEmail = void 0;
+exports.sendUserVerifiedEmail = exports.sendLoginNotificationEmail = exports.sendResetPasswordOtpEmail = exports.sendLoginOtpEmail = exports.sendPasswordChangedEmail = exports.sendPasswordResetEmail = exports.sendProfileUpdateEmail = exports.sendWelcomeEmail = exports.sendStaffWelcomeEmail = exports.sendSuperAdminWelcomeEmail = exports.sendRoleCreationEmail = exports.sendDeptCreationEmail = exports.sendBranchCreationEmail = exports.sendOrgWelcomeEmail = void 0;
 // welcomeEmail.ts
 const emailService_1 = require("./emailService");
 const handlebars_1 = __importDefault(require("handlebars"));
@@ -42,6 +42,22 @@ const sendOrgWelcomeEmail = (_a) => __awaiter(void 0, [_a], void 0, function* ({
     }
 });
 exports.sendOrgWelcomeEmail = sendOrgWelcomeEmail;
+const sendBranchCreationEmail = (nameOfOrg, orgEmail, nameOfDept, currentTime, createdByName) => __awaiter(void 0, void 0, void 0, function* () {
+    const templatePath = path_1.default.join(process.cwd(), 'src', 'services', 'email', 'emailTemps', 'branchCreationEmail.hbs');
+    const templateSource = fs_1.default.readFileSync(templatePath, 'utf-8');
+    // Compile the Handlebars templates
+    const template = handlebars_1.default.compile(templateSource);
+    const html = template({ nameOfOrg, currentTime, nameOfDept, createdByName });
+    const subject = 'New Branch Created.';
+    try {
+        yield (0, emailService_1.sendMail)(orgEmail, subject, html);
+        console.log('email sent successfully!');
+    }
+    catch (error) {
+        console.error('Error email:', error);
+    }
+});
+exports.sendBranchCreationEmail = sendBranchCreationEmail;
 const sendDeptCreationEmail = (nameOfOrg, orgEmail, nameOfDept, currentTime, createdByName) => __awaiter(void 0, void 0, void 0, function* () {
     const templatePath = path_1.default.join(process.cwd(), 'src', 'services', 'email', 'emailTemps', 'departmentCreationEmail.hbs');
     const templateSource = fs_1.default.readFileSync(templatePath, 'utf-8');
@@ -90,6 +106,22 @@ const sendSuperAdminWelcomeEmail = (_a) => __awaiter(void 0, [_a], void 0, funct
     }
 });
 exports.sendSuperAdminWelcomeEmail = sendSuperAdminWelcomeEmail;
+const sendStaffWelcomeEmail = (_a) => __awaiter(void 0, [_a], void 0, function* ({ firstName, loginEmail, tempPass, userClass, currentTime, nameOfOrg, staffLevel }) {
+    const templatePath = path_1.default.join(process.cwd(), 'src', 'services', 'email', 'emailTemps', 'superAdminRegEmail.hbs');
+    const templateSource = fs_1.default.readFileSync(templatePath, 'utf-8');
+    // Compile the Handlebars templates
+    const template = handlebars_1.default.compile(templateSource);
+    const html = template({ firstName, loginEmail, tempPass, userClass, currentTime, nameOfOrg, staffLevel });
+    const subject = 'Super Admin Registration.';
+    try {
+        yield (0, emailService_1.sendMail)(loginEmail, subject, html);
+        console.log('Welcome email sent successfully!');
+    }
+    catch (error) {
+        console.error('Error sending welcome email:', error);
+    }
+});
+exports.sendStaffWelcomeEmail = sendStaffWelcomeEmail;
 const sendWelcomeEmail = (firstName, userEmail, verifyEMailOtpCode) => __awaiter(void 0, void 0, void 0, function* () {
     const templatePath = path_1.default.join(process.cwd(), 'src', 'services', 'email', 'emailTemps', 'registration.hbs');
     const templateSource = fs_1.default.readFileSync(templatePath, 'utf-8');

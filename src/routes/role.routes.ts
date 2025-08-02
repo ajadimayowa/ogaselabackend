@@ -6,7 +6,7 @@ import { getRolesByDepartment } from '../controllers/role.controller';
 const router = Router();
 router.post('/role/create-superadmin',isCreator,createSuperAdminRole);
 router.post('/role/create',verifyToken,isSuperAdmin, createRole);
-router.get('/role/by-department/:departmentId', verifyToken,isSuperAdmin, getRolesByDepartment);
+router.get('/role/by-department/:departmentId', verifyToken,getRolesByDepartment);
 
 
 export default router;

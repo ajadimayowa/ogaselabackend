@@ -34,36 +34,24 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const organizationSchema = new mongoose_1.Schema({
-    nameOfOrg: { type: String, required: true },
-    orgEmail: { type: String, required: true, unique: true },
-    orgPhoneNumber: { type: String, required: true }, // changed to string for flexibility
-    orgAddress: { type: String, required: true },
-    orgLga: { type: String, required: true },
-    orgState: { type: String, required: true },
-    orgRegNumber: { type: String, required: true },
+const BranchSchema = new mongoose_1.Schema({
+    nameOfBranch: { type: String, required: true },
+    branchManager: {
+        id: { type: String, required: true },
+        fullName: { type: String, required: true }
+    },
+    branchAddress: { type: String, required: true },
+    state: { type: String, required: true },
+    lga: { type: String, required: true },
     createdByName: { type: String, required: true },
-    createdByEmail: { type: String, required: true },
-    updatedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Users' },
+    createdById: { type: String, required: true },
+    selectedApprover: { type: String, required: false },
+    approvedById: { type: String },
+    approvedName: { type: String },
+    isApproved: { type: Boolean, default: false },
     isDisabled: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
-    orgSubscriptionPlan: {
-        type: String,
-        enum: ['basic', 'standard', 'pro'],
-        default: 'basic',
-    },
-    organisationLogo: { type: String },
-    organisationPrimaryColor: { type: String },
-    organisationSecondaryColor: { type: String },
-}, {
-    timestamps: true,
-    toJSON: {
-        virtuals: true,
-        versionKey: false,
-        transform: (_doc, ret) => {
-            ret.id = ret._id;
-            delete ret._id;
-        },
-    },
-});
-exports.default = mongoose_1.default.model('Organization', organizationSchema);
+    organization: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Organization', required: true },
+}, { timestamps: true });
+BranchSchema.index({ nameOfBranch: 1, organization: 1 }, { unique: true });
+exports.default = mongoose_1.default.model('Branch', BranchSchema);

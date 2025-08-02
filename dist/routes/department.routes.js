@@ -41,8 +41,8 @@ const departmentController = __importStar(require("../controllers/department.con
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = express_1.default.Router();
 router.post('/department/create-admin', auth_middleware_1.isCreator, departmentController.createAdminDepartment);
-router.post('/department/create', auth_middleware_1.isCreator, departmentController.createDepartment);
-router.get('/department/by-organization/:organizationId', auth_middleware_1.isCreator, departmentController.getDepartmentsByOrganizationId);
+router.post('/department/create', auth_middleware_1.verifyToken, departmentController.createDepartment);
+router.get('/department/by-organization/:organizationId', departmentController.getDepartmentsByOrganizationId);
 router.get('/department/', auth_middleware_1.isCreator, departmentController.getAllDepartments);
 router.get('/department/:id', auth_middleware_1.isCreator, departmentController.getDepartmentById);
 router.put('/department/:id', auth_middleware_1.isCreator, departmentController.updateDepartment);

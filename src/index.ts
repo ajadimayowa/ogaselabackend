@@ -11,6 +11,8 @@ import userRoleRoutes from './routes/userRole.routes';
 import departmentRoutes from './routes/department.routes';
 import staffRoutes from './routes/staff.routes';
 import stateRoutes from './routes/stateRoutes';
+import branchRoutes from './routes/branch-routes/branch.routes';
+import Organization from './models/Organization';
 
 dotenv.config();
 
@@ -34,6 +36,7 @@ app.use(express.json());
 const apiPrefix = '/api/v1/';
 // Routes
 app.use(apiPrefix, orgRoutes);
+app.use(apiPrefix, branchRoutes);
 app.use(apiPrefix, departmentRoutes);
 app.use(apiPrefix, roleRoutes);
 app.use(apiPrefix, staffRoutes);

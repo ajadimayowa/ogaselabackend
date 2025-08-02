@@ -34,21 +34,21 @@ export const createSuperAdminRole = async (req: Request, res: Response) => {
     }
 
     const role: Partial<IRole> = await Role.create({
-    roleName,
-    roleDepartment,
-    organization,
-    rolePermissions,
-    roleCreatedBy:{
-      roleCreatedByName,
-      roleCreatedById,
-    },
-    approvedBy: {
-      approvedByName,
-      approvedById,
-    },
-    isApproved,
-    isDisabled,
-    roleDescription,
+      roleName,
+      roleDepartment,
+      organization,
+      rolePermissions,
+      roleCreatedBy: {
+        roleCreatedByName,
+        roleCreatedById,
+      },
+      approvedBy: {
+        approvedByName,
+        approvedById,
+      },
+      isApproved,
+      isDisabled,
+      roleDescription,
     });
 
 
@@ -74,44 +74,68 @@ export const createSuperAdminRole = async (req: Request, res: Response) => {
 };
 
 export const createRole = async (req: Request, res: Response) => {
-  const { organization, roleDepartment, roleName, rolePermissions, roleCreatedByName, roleCreatedById, roleDescription, creatorId } = req.body;
-
-  console.log({ sent: req.body });
   try {
+    const {
+      organization,
+      roleDepartment,
+      roleName,
+      rolePermission,
+      roleCreatedByName,
+      roleCreatedById,
+      roleDescription,
+    } = req.body;
+
+    console.log({ received: req.body });
+
+    // Check if organization exists
     const organizationExists = await Organization.findById(organization);
     if (!organizationExists) {
       res.status(400).json({ success: false, message: 'Organization does not exist' });
-      return;
+      return ;
     }
-    const exists = await Role.findOne({ roleName, roleDepartment });
-    if (exists) {
+
+    // Check if role with same name and department already exists
+    const existingRole = await Role.findOne({ roleName, roleDepartment });
+    if (existingRole) {
       res.status(400).json({ success: false, message: 'Role already exists' });
-      return;
+      return ;
     }
 
-    const role: Partial<IRole> = await Role.create({
-     ...req.body
-    });
+    // Construct the new role
+    const newRoleData = {
+      roleName,
+      roleDepartment,
+      organization,
+      rolePermissions: rolePermission ? [rolePermission] : [],
+      roleCreatedBy: {
+        roleCreatedById,
+        roleCreatedByName
+      },
+      roleDescription,
+    };
 
+    const role = await Role.create(newRoleData);
 
+    // Prepare email props
     const props = {
       nameOfOrg: organizationExists.nameOfOrg,
-      orgEmail: organizationExists.orgEmail, // You can set the organization's email here
+      orgEmail: organizationExists.orgEmail,
       nameOfRole: roleName,
-      currentTime: moment().format('DD/MM/YYYY HH:MM A')
-    }
+      currentTime: moment().format('DD/MM/YYYY hh:mm A'),
+    };
 
-    try {
-      await sendRoleCreationEmail(props)
-    } catch (error) {
-      console.error('Error sending role creation email:', error);
+    // Send role creation email (non-blocking)
+    sendRoleCreationEmail(props).catch(err => {
+      console.error('Error sending role creation email:', err);
+    });
 
-    }
-
-    res.status(201).json({ success: false, message: 'Role Created!', payload: role });
+    res.status(201).json({ success: true, message: 'Role created successfully', payload: role });
+    return ;
 
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed tp create role', payload: err });
+    console.error('Error creating role:', err);
+    res.status(500).json({ success: false, message: 'Failed to create role', payload: err });
+    return ;
   }
 };
 
@@ -119,9 +143,13 @@ export const getRolesByDepartment = async (req: Request, res: Response) => {
   const { departmentId } = req.params;
 
   try {
-    const roles = await Role.find({ department: departmentId });
-    res.status(200).json(roles);
+    const roles = await Role.find({ roleDepartment: departmentId });
+    let roleData = roles.map((role)=>({
+      value:role._id,
+      label:role.roleName
+    }))
+    res.status(200).json({success:true,payload:roleData});
   } catch (err) {
-    res.status(500).json({ msg: 'Failed to fetch roles' });
+    res.status(500).json({success:false, message: 'Failed to fetch roles',payload:err });
   }
 };

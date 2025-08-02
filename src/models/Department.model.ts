@@ -13,7 +13,7 @@ const departmentSchema = new Schema<IDepartment>({
   },
   isApproved: { type: Boolean, default: false },
   approvedBy: {
-    approvedByName: { type: String, required: true },
+    approvedByName: { type: String},
     approvedById: { type: String, required: true },
     dateApproved: { type: Date, default: Date.now }, // Default to current date
   },
