@@ -8,7 +8,7 @@ export const hasPermission = (requiredPermission: string) => {
     try {
       const roles = await Role.find({ _id: { $in: user.roles } });
 
-      const allPermissions = roles.flatMap(role => role.rolePermissions || []);
+      const allPermissions = roles.flatMap(role => role.permissions || []);
       if (!allPermissions.includes(requiredPermission)) {
         return res.status(403).json({ msg: 'Permission denied' });
       }

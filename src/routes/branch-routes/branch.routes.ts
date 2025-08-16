@@ -1,38 +1,22 @@
-import express from 'express';
-import {
+import { Router } from "express";
+import { 
   createBranch,
   getBranches,
-  getBranch,
+  getBranchById,
   updateBranch,
   deleteBranch,
-  approveBranch
-} from '../../controllers/branch-controllers/branch.controller'; // adjust path if needed
-import { verifyToken } from '../../middleware/auth.middleware';
+  addStaffToBranch 
+ } from "../../controllers/branch-controllers/branch.controller";
+import { isSuperAdmin, verifyToken } from "../../middleware/auth.middleware";
 
-const router = express.Router();
+const router = Router();
 
-// @route   POST /api/branches
-// @desc    Create a new branch
-router.post('/branch/create', verifyToken, createBranch);
+router.post("/branch",verifyToken,isSuperAdmin, createBranch);
+router.get("/branches",verifyToken,isSuperAdmin,  getBranches);
+router.get("/branch/:id",verifyToken,isSuperAdmin,  getBranchById);
+router.put("/branch/:id",verifyToken,isSuperAdmin,  updateBranch);
+router.delete("branch/:id",verifyToken,isSuperAdmin,  deleteBranch);
 
-// @route   GET /api/branches
-// @desc    Get branches by optional organizationId and isApproved
-router.get('/branch', verifyToken, getBranches);
-
-// @route   GET /api/branches/:id
-// @desc    Get a single branch by ID
-// router.get('/:id', getBranch);
-
-// @route   PUT /api/branches/:id
-// @desc    Update branch by ID
-// router.put('/:id', updateBranch);
-
-// @route   DELETE /api/branches/:id
-// @desc    Soft delete a branch by ID
-// router.delete('/:id', deleteBranch);
-
-// @route   PUT /api/branches/:id/approve
-// @desc    Approve a branch
-// router.put('/:id/approve', approveBranch);
+router.post("branch/add-staff",verifyToken,isSuperAdmin, addStaffToBranch);
 
 export default router;

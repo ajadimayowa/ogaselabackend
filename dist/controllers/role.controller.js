@@ -12,123 +12,132 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRolesByDepartment = exports.createRole = exports.createSuperAdminRole = void 0;
+exports.getRolesByDepartment = exports.getRolesController = exports.createRole = exports.createSuperAdminRole = void 0;
 const Role_1 = __importDefault(require("../models/Role"));
-const emailTypesHandler_1 = require("../services/email/emailTypesHandler");
-const moment_1 = __importDefault(require("moment"));
-const Organization_1 = __importDefault(require("../models/Organization"));
+const Organization_1 = require("../models/Organization");
 const createSuperAdminRole = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { roleName, roleDepartment, organization, rolePermissions, roleCreatedByName, roleCreatedById, approvedByName, isApproved, approvedById, isDisabled, roleDescription, creatorPass } = req.body;
-    // console.log({ sent: req.body });
     try {
-        const organizationExists = yield Organization_1.default.findById(organization);
+        const { organization, department, name, createdBy, createdByModel, description, } = req.body;
+        console.log({ received: req.body });
+        // Check if organization exists
+        const organizationExists = yield Organization_1.Organization.findById(organization);
         if (!organizationExists) {
-            res.status(400).json({ success: false, message: 'Organization does not exist' });
-            return;
+            return res.status(400).json({ success: false, message: 'Organization does not exist' });
         }
-        const exists = yield Role_1.default.findOne({ roleName, roleDepartment });
-        if (exists) {
-            res.status(400).json({ success: false, message: 'Role already exists' });
-            return;
+        // Check if role with same name and department already exists
+        const existingRole = yield Role_1.default.findOne({ name, department, organization });
+        if (existingRole) {
+            return res.status(400).json({ success: false, message: 'Role already exists' });
         }
         const role = yield Role_1.default.create({
-            roleName,
-            roleDepartment,
+            name: name.trim(),
+            department,
             organization,
-            rolePermissions,
-            roleCreatedBy: {
-                roleCreatedByName,
-                roleCreatedById,
-            },
-            approvedBy: {
-                approvedByName,
-                approvedById,
-            },
-            isApproved,
-            isDisabled,
-            roleDescription,
+            createdBy,
+            createdByModel,
+            permissions: ['all.access'],
+            description
         });
-        const props = {
-            nameOfOrg: organizationExists.nameOfOrg,
-            orgEmail: organizationExists.orgEmail, // You can set the organization's email here
-            nameOfRole: roleName,
-            currentTime: (0, moment_1.default)().format('DD/MM/YYYY HH:MM A')
-        };
-        try {
-            yield (0, emailTypesHandler_1.sendRoleCreationEmail)(props);
-        }
-        catch (error) {
-            console.error('Error sending role creation email:', error);
-        }
-        res.status(201).json({ success: true, message: 'Role Created!', payload: role });
+        return res.status(201).json({ success: true, message: 'Role created successfully', payload: role });
     }
     catch (err) {
-        res.status(500).json({ success: true, message: 'Failed tp create role', payload: err });
+        console.error('Error creating role:', err);
+        return res.status(500).json({ success: false, message: 'Failed to create role', payload: err });
     }
 });
 exports.createSuperAdminRole = createSuperAdminRole;
 const createRole = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { organization, roleDepartment, roleName, rolePermission, roleCreatedByName, roleCreatedById, roleDescription, } = req.body;
+        const { organization, department, name, createdBy, createdByModel, description, } = req.body;
         console.log({ received: req.body });
         // Check if organization exists
-        const organizationExists = yield Organization_1.default.findById(organization);
+        const organizationExists = yield Organization_1.Organization.findById(organization);
         if (!organizationExists) {
-            res.status(400).json({ success: false, message: 'Organization does not exist' });
-            return;
+            return res.status(400).json({ success: false, message: 'Organization does not exist' });
         }
         // Check if role with same name and department already exists
-        const existingRole = yield Role_1.default.findOne({ roleName, roleDepartment });
+        const existingRole = yield Role_1.default.findOne({ name, department, organization });
         if (existingRole) {
-            res.status(400).json({ success: false, message: 'Role already exists' });
-            return;
+            return res.status(400).json({ success: false, message: 'Role already exists' });
         }
-        // Construct the new role
-        const newRoleData = {
-            roleName,
-            roleDepartment,
+        const role = yield Role_1.default.create({
+            name: name.trim(),
+            department,
             organization,
-            rolePermissions: rolePermission ? [rolePermission] : [],
-            roleCreatedBy: {
-                roleCreatedById,
-                roleCreatedByName
-            },
-            roleDescription,
-        };
-        const role = yield Role_1.default.create(newRoleData);
-        // Prepare email props
-        const props = {
-            nameOfOrg: organizationExists.nameOfOrg,
-            orgEmail: organizationExists.orgEmail,
-            nameOfRole: roleName,
-            currentTime: (0, moment_1.default)().format('DD/MM/YYYY hh:mm A'),
-        };
-        // Send role creation email (non-blocking)
-        (0, emailTypesHandler_1.sendRoleCreationEmail)(props).catch(err => {
-            console.error('Error sending role creation email:', err);
+            createdBy,
+            createdByModel,
+            permissions: [],
+            description
         });
-        res.status(201).json({ success: true, message: 'Role created successfully', payload: role });
-        return;
+        return res.status(201).json({ success: true, message: 'Role created successfully', payload: role });
     }
     catch (err) {
         console.error('Error creating role:', err);
-        res.status(500).json({ success: false, message: 'Failed to create role', payload: err });
-        return;
+        return res.status(500).json({ success: false, message: 'Failed to create role', payload: err });
     }
 });
 exports.createRole = createRole;
+const getRolesController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { departmentId, organizationId, status, page = 1, limit = 10 } = req.query;
+        // Build filter object
+        const filter = {};
+        if (departmentId)
+            filter.department = departmentId;
+        if (organizationId)
+            filter.organization = organizationId;
+        if (status)
+            filter.status = status; // Assuming `status` is a field in your Role schema
+        // Pagination calculations
+        const pageNumber = parseInt(page, 10);
+        const pageLimit = parseInt(limit, 10);
+        const skip = (pageNumber - 1) * pageLimit;
+        // Query database
+        const [roles, total] = yield Promise.all([
+            Role_1.default.find(filter)
+                .populate('department')
+                .populate('organization')
+                .skip(skip)
+                .limit(pageLimit)
+                .sort({ createdAt: -1 }), // latest first
+            Role_1.default.countDocuments(filter)
+        ]);
+        return res.status(200).json({
+            success: true,
+            message: 'Roles fetched successfully',
+            payload: {
+                data: roles,
+                pagination: {
+                    total,
+                    page: pageNumber,
+                    limit: pageLimit,
+                    totalPages: Math.ceil(total / pageLimit)
+                }
+            }
+        });
+    }
+    catch (err) {
+        console.error('Error fetching roles:', err);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch roles',
+            payload: err
+        });
+    }
+});
+exports.getRolesController = getRolesController;
 const getRolesByDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { departmentId } = req.params;
     try {
         const roles = yield Role_1.default.find({ roleDepartment: departmentId });
         let roleData = roles.map((role) => ({
             value: role._id,
-            label: role.roleName
+            label: role.name
         }));
-        res.status(200).json({ success: true, payload: roleData });
+        return res.status(200).json({ success: true, payload: roleData });
     }
     catch (err) {
-        res.status(500).json({ success: false, message: 'Failed to fetch roles', payload: err });
+        return res.status(500).json({ success: false, message: 'Failed to fetch roles', payload: err });
     }
 });
 exports.getRolesByDepartment = getRolesByDepartment;

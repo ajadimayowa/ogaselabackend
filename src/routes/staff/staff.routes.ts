@@ -1,14 +1,15 @@
 import { Router } from 'express';
 // import { register, login } from '../controllers/auth.controller';
-import { createStaff, getStaffs, registerSuperAdmin } from '../controllers/staff-controllers';
-import { isCreator, isSuperAdmin, verifyToken } from '../middleware/auth.middleware';
-import { loginStaff,requestPasswordResetOtp,resetStaffPasswordWithOtp,verifyLoginOtp} from '../controllers/auth/staff';
+import { createStaff, getStaffs, registerSuperAdmin } from '../../controllers/staff/staff-controllers';
+import { isCreator, isSuperAdmin, verifyRootAdminToken, verifyToken } from '../../middleware/auth.middleware';
+import { loginStaff,requestPasswordResetOtp,resetStaffPasswordWithOtp,verifyLoginOtp} from '../../controllers/auth/staff';
 
 const router = Router();
 
-router.post('/staff/create-superadmin',isCreator, registerSuperAdmin);
+router.post('/staff/create-superadmin',verifyRootAdminToken, registerSuperAdmin);
 router.post('/staff/create',verifyToken,isSuperAdmin, createStaff);
 router.get('/staff/staffs',verifyToken,getStaffs);
+
 router.post('/staff/login', loginStaff);
 router.post('/staff/verify-otp', verifyLoginOtp);
 router.post('/staff/request-password-reset-otp', requestPasswordResetOtp);

@@ -34,32 +34,54 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
+const permissions_1 = require("../constants/permissions");
 const roleSchema = new mongoose_1.Schema({
-    roleName: { type: String, required: true },
-    roleDepartment: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Department', required: true },
-    organization: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Organization', required: true },
-    rolePermissions: [{ type: String }],
-    roleCreatedBy: {
-        roleCreatedById: { type: mongoose_1.Schema.Types.ObjectId, required: true, ref: 'User' },
-        roleCreatedByName: { type: String, required: true }
+    name: { type: String, required: true },
+    department: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'Department',
+        required: true,
+    },
+    organization: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'Organization',
+        required: true,
+    },
+    permissions: [{
+            type: String,
+            enum: permissions_1.GLOBAL_PERMISSIONS.map(p => p.name), // validates against your global list
+        }],
+    createdBy: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        required: true,
+        refPath: 'createdByModel', // dynamic reference
+    },
+    createdByModel: {
+        type: String,
+        required: true,
+        enum: ['Creator', 'Staffs'], // only Creator or Staff can create
+    },
+    updatedBy: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        refPath: 'updatedByModel',
+    },
+    updatedByModel: {
+        type: String,
+        enum: ['Creator', 'Staffs'],
     },
     isApproved: { type: Boolean, default: false },
     isDisabled: { type: Boolean, default: false },
-    roleApprovedBy: {
-        roleApprovedByName: { type: String },
-        roleApprovedById: { type: String },
-        dateApproved: { type: Date },
-    },
-    roleDescription: { type: String, required: true },
+    description: { type: String, required: true },
 }, {
     timestamps: true,
     toJSON: {
         virtuals: true,
         versionKey: false, // removes __v
         transform: (_doc, ret) => {
-            ret.id = ret._id; // rename _id to id
+            ret.id = ret._id.toString(); // rename _id to id
             delete ret._id; // remove _id
-        }
-    }
+        },
+    },
 });
+roleSchema.index({ name: 1, department: 1, organization: 1 }, { unique: true });
 exports.default = mongoose_1.default.model('Role', roleSchema);

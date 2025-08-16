@@ -1,7 +1,37 @@
 
 import nodemailer from 'nodemailer';
+import path from 'path';
+import axios from 'axios';
 
-export const sendMail = async (userEmail: string, subject: string, html: string) => {
+interface RemoteImage {
+  url: string;
+  cid: string;
+  filename?: string; // optional
+}
+
+
+export const sendMail = async (
+  userEmail: string,
+  subject: string,
+  html: string,
+  remoteImages: RemoteImage[] = []
+) => {
+
+  const attachments = await Promise.all(
+    remoteImages.map(async (img) => {
+      const response = await axios.get(img.url, { responseType: 'arraybuffer' });
+
+      // Guess filename from URL if not provided
+      const fileNameFromURL = img.url.split('/').pop() || 'image.png';
+
+      return {
+        filename: img.filename || fileNameFromURL,
+        content: Buffer.from(response.data, 'binary'),
+        cid: img.cid,
+      };
+    })
+    
+  );
   const transporter = nodemailer.createTransport({
     host: process.env.BREVO_SMTP_HOST, // Brevo SMTP host
     port: parseInt('465'), // Use 587 for TLS
@@ -18,6 +48,19 @@ export const sendMail = async (userEmail: string, subject: string, html: string)
     to: userEmail, // Recipient's email address
     subject: subject,
     html: html,
+    attachments: attachments,
+    // attachments: [
+    //   {
+    //     filename: 'fsh-email-template-footer.png',
+    //     path: path.join(process.cwd(), 'src', 'assets', 'images', 'fsh-email-template-footer.png'),
+    //     cid: 'footerImage' // Use this CID in the HTML to reference the image
+    //   },
+    //   {
+    //     filename: 'fsh-logo.png',
+    //     path: path.join(process.cwd(), 'src', 'assets', 'images', 'fsh-logo.png'),
+    //     cid: 'logoImage' // Use this CID in the HTML to reference the image
+    //   }
+    //   ]
   };
 
   return transporter.sendMail(mailerOptions);

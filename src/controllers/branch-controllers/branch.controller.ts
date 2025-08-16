@@ -1,142 +1,267 @@
-import { Request, Response } from 'express';
-import Branch from '../../models/Branch';
-import Organization from '../../models/Organization';
-import { sendBranchCreationEmail, sendOrgWelcomeEmail } from '../../services/email/emailTypesHandler';
-import moment from 'moment';
+import { Request, Response } from "express";
+import { Branch } from "../../models/Branch.model";
+import mongoose from "mongoose";
+import Staff from "../../models/Staff";
 
-// ✅ Create Branch
-export const createBranch = async (req: Request, res: Response):Promise<void> => {
-    const {
-        nameOfBranch,
-        branchManager,
-        branchAddress,
-        state,
-        lga,
-        createdByName,
-        createdById,
-        selectedApprover,
-        organization,
-        nameOfOrg,
-        orgEmail
-    } = req.body;
-
+// Create Branch
+export const createBranch = async (req: Request, res: Response): Promise<any> => {
     try {
-        const existing = await Branch.findOne({ nameOfBranch, organization });
-        if (existing) {
-        res.status(400).json({ success: false, message: 'Branch name already exists for this organization' });
+        const { name, manager, address, state, lga, organization, createdBy } = req.body;
+
+        // Check unique name within the same organization
+        const existingBranch = await Branch.findOne({ name, organization, isDeleted: false });
+        if (existingBranch) {
+            return res.status(400).json({ message: "Branch name already exists in this organization" });
         }
 
-        if(!nameOfOrg || !orgEmail){
-            res.status(400).json({ success: true, message:'Organisation does not exist!'});
-            return ;
+        // Ensure manager is not managing another branch
+        const managerExists = await Branch.findOne({ manager, isDeleted: false });
+        if (managerExists) {
+            return res.status(400).json({ message: "This manager is already managing another branch" });
         }
 
-        await Branch.create({
-            nameOfBranch,
-            branchManager:{
-                id:branchManager?.id,
-                fullName:branchManager?.fullName,
-            },
-            branchAddress,
+        const branch = await Branch.create({
+            name,
+            manager,
+            address,
             state,
             lga,
-            createdByName,
-            createdById,
-            selectedApprover,
             organization,
+            createdBy,
+            isDisabled: false,
+            isDeleted: false,
         });
 
-        res.status(201).json({ success: true, message:'New branch created succesfully!'});
-        try {
-            await sendBranchCreationEmail(nameOfOrg,orgEmail,nameOfBranch,moment().format('DD/MM/YYYY HH:MM A'),createdByName)
-        } catch (error) {
-            
+        return res.status(201).json(branch);
+    } catch (error: any) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+// Get Branches with Pagination + Filters
+export const getBranches = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const { page = 1, limit = 10, name, status, organizationId } = req.query;
+
+        const filters: any = { isDeleted: false };
+
+        if (name) filters.name = { $regex: name as string, $options: "i" };
+        if (status === "disabled") filters.isDisabled = true;
+        if (status === "active") filters.isDisabled = false;
+        if (organizationId) filters.organization = new mongoose.Types.ObjectId(organizationId as string);
+
+        const branches = await Branch.find(filters)
+            .populate("manager", "fullName email")
+            .populate("organization", "name")
+            .skip((+page - 1) * +limit)
+            .limit(+limit)
+            .sort({ createdAt: -1 });
+
+        const total = await Branch.countDocuments(filters);
+
+        return res.status(200).json({
+            success: true,
+            payload: branches,
+            pagination: {
+                total,
+                page: +page,
+                limit: +limit,
+                totalPages: Math.ceil(total / +limit),
+            }
+
+        });
+    } catch (error: any) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+// Get Branch by ID
+export const getBranchById = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const branch = await Branch.findById(req.params.id)
+            .populate("manager", "fullName email")
+            .populate("organization", "name");
+
+        if (!branch || branch.isDeleted) {
+            return res.status(404).json({ message: "Branch not found" });
         }
-        return;
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Error creating branch', error });
+
+        return res.status(200).json(branch);
+    } catch (error: any) {
+        return res.status(500).json({ message: error.message });
     }
 };
 
-// 📥 Get Branches (with optional filters)
-export const getBranches = async (req: Request, res: Response) => {
-    const { organizationId, isApproved } = req.query;
-
-    const filter: any = {};
-    if (organizationId) filter.organization = organizationId;
-    if (isApproved !== undefined) filter.isApproved = isApproved === 'true';
-
+// Update Branch
+export const updateBranch = async (req: Request, res: Response): Promise<any> => {
     try {
-        const branches = await Branch.find(filter).sort({ createdAt: -1 });
-        res.status(200).json({ success: true, payload: branches });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Error fetching branches', error });
+        const { name, manager, address, state, lga, approvedBy } = req.body;
+
+        const branch = await Branch.findById(req.params.id);
+        if (!branch || branch.isDeleted) {
+            return res.status(404).json({ message: "Branch not found" });
+        }
+
+        // Check unique name in the same organization
+        if (name && name !== branch.name) {
+            const existing = await Branch.findOne({ name, organization: branch.organization, isDeleted: false });
+            if (existing) {
+                return res.status(400).json({ message: "Branch name already exists in this organization" });
+            }
+        }
+
+        // Check manager
+        if (manager && manager.toString() !== branch.manager.toString()) {
+            const managerExists = await Branch.findOne({ manager, isDeleted: false });
+            if (managerExists) {
+                return res.status(400).json({ message: "This manager is already managing another branch" });
+            }
+
+            // Add to manager history
+            branch.managerHistory.push({
+                manager: branch.manager,
+                from: new Date(),
+                to: new Date(),
+            });
+
+            branch.manager = manager;
+        }
+
+        branch.name = name || branch.name;
+        branch.address = address || branch.address;
+        branch.state = state || branch.state;
+        branch.lga = lga || branch.lga;
+        branch.approvedBy = approvedBy || branch.approvedBy;
+
+        await branch.save();
+
+        return res.status(200).json(branch);
+    } catch (error: any) {
+        return res.status(500).json({ message: error.message });
     }
 };
 
-// 🔍 Get Single Branch
-export const getBranch = async (req: Request, res: Response) => {
-    const { id } = req.params;
-
+// Soft Delete Branch
+export const deleteBranch = async (req: Request, res: Response): Promise<any> => {
     try {
-        const branch = await Branch.findById(id);
+        const branch = await Branch.findById(req.params.id);
+        if (!branch || branch.isDeleted) {
+            return res.status(404).json({ message: "Branch not found" });
+        }
+
+        branch.isDeleted = true;
+        await branch.save();
+
+        return res.status(200).json({ message: "Branch deleted successfully" });
+    } catch (error: any) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+export const addStaffToBranch = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const { branchId, staffId, addedBy } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(branchId) || !mongoose.Types.ObjectId.isValid(staffId)) {
+            return res.status(400).json({ message: "Invalid branchId or staffId" });
+        }
+
+        // Check if branch exists
+        const branch = await Branch.findById(branchId);
         if (!branch) {
-            return res.status(404).json({ success: false, message: 'Branch not found' });
+            return res.status(404).json({ message: "Branch not found" });
         }
-        res.status(200).json({ success: true, data: branch });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Error retrieving branch', error });
+
+        // Check if staff exists
+        const staff = await Staff.findById(staffId);
+        if (!staff) {
+            return res.status(404).json({ message: "Staff not found" });
+        }
+
+        // Ensure staff is not already assigned to another branch
+        if (staff.branch) {
+            return res.status(400).json({ message: "Staff already assigned to a branch" });
+        }
+
+        // Add staff to branch
+        branch.staffs.push(staff.id);
+        await branch.save();
+
+        // Update staff's current branch
+        staff.branch = branch.id;
+        staff.branchTransferHistory.push({
+            toBranch: branch.id,
+            transferDate: new Date(),
+            transferedBy: addedBy
+        });
+        await staff.save();
+
+        return res.status(200).json({ message: "Staff added to branch successfully", branch, staff });
+    } catch (error: any) {
+        return res.status(500).json({ message: "Error adding staff to branch", error: error.message });
     }
 };
 
-// ✏️ Update Branch
-export const updateBranch = async (req: Request, res: Response) => {
-    const { id } = req.params;
-
+// Transfer Staff Between Branches
+export const transferStaff = async (req: Request, res: Response): Promise<any> => {
     try {
-        const updated = await Branch.findByIdAndUpdate(id, req.body, { new: true });
-        if (!updated) {
-            return res.status(404).json({ success: false, message: 'Branch not found' });
-        }
-        res.status(200).json({ success: true, data: updated });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Error updating branch', error });
-    }
-};
+        const { staffId, newBranchId } = req.body;
 
-// ❌ Soft Delete Branch
-export const deleteBranch = async (req: Request, res: Response) => {
-    const { id } = req.params;
-
-    try {
-        const deleted = await Branch.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
-        if (!deleted) {
-            return res.status(404).json({ success: false, message: 'Branch not found' });
-        }
-        res.status(200).json({ success: true, message: 'Branch deleted (soft)', data: deleted });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Error deleting branch', error });
-    }
-};
-
-// 🧾 Approve Branch
-export const approveBranch = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { approvedById, approvedName } = req.body;
-
-    try {
-        const approved = await Branch.findByIdAndUpdate(
-            id,
-            { isApproved: true, approvedById, approvedName },
-            { new: true }
-        );
-
-        if (!approved) {
-            return res.status(404).json({ success: false, message: 'Branch not found' });
+        // Validate input
+        if (!staffId || !newBranchId) {
+            return res.status(400).json({ message: "staffId and newBranchId are required" });
         }
 
-        res.status(200).json({ success: true, message: 'Branch approved', data: approved });
+        const staff = await Staff.findById(staffId).populate("branch");
+        const newBranch = await Branch.findById(newBranchId);
+
+        if (!staff) {
+            return res.status(404).json({ message: "Staff not found" });
+        }
+
+        if (!newBranch) {
+            return res.status(404).json({ message: "New branch not found" });
+        }
+
+        // Check if staff is already in the new branch
+        if (staff.branch?.toString() === newBranchId) {
+            return res.status(400).json({ message: "Staff is already in this branch" });
+        }
+
+        let previousBranchId = null;
+
+        // If staff has a current branch, remove them from it
+        if (staff.branch) {
+            const previousBranch = await Branch.findById(staff.branch);
+            if (previousBranch) {
+                previousBranch.staffs = previousBranch.staffs.filter(
+                    (id) => id.toString() !== staffId.toString()
+                );
+                await previousBranch.save();
+                previousBranchId = previousBranch._id;
+            }
+        }
+
+        // Add staff to the new branch
+        newBranch.staffs.push(staff.id);
+        await newBranch.save();
+
+        // Update staff branch reference and history
+        staff.branch = newBranch.id;
+        staff.branchTransferHistory.push({
+            fromBranch: previousBranchId,
+            toBranch: newBranch.id,
+            transferDate: new Date(),
+        });
+
+        await staff.save();
+
+        return res.status(200).json({
+            message: "Staff transferred successfully",
+            staff,
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error approving branch', error });
+        console.error("Error transferring staff:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
     }
 };

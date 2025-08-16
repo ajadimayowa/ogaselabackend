@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { Types } from 'mongoose';
+import { ICreator } from './Creator.model';
 
 export interface IStaffKyc {
   verificationIdType?: 'bvn' | 'int_passport' | 'driver_license';
@@ -34,14 +35,23 @@ export interface ICreatedBy {
   createdById: string;
   createdByClass: UserClass;
 }
+interface TransferHistory {
+  fromBranch?: mongoose.Types.ObjectId | any; // optional for first branch assignment
+  toBranch: mongoose.Types.ObjectId;
+  transferDate: Date;
+  reason?: string;
+  approvedBy?: mongoose.Types.ObjectId; // Optional: Staff/Admin 
+  transferedBy?: mongoose.Types.ObjectId; // Optional: Staff/Admin ID
+}
 
 export interface IStaff extends Document {
-  id?:string,
+  id?: string,
   fullName: string;
   firstName: string;
   email: string;
   password: string;
   organization: Types.ObjectId;
+  branch:Types.ObjectId;
   department: Types.ObjectId;
   roles: Types.ObjectId[];
   homeAddress: string;
@@ -50,17 +60,16 @@ export interface IStaff extends Document {
   phoneNumber: number;
   emailOtp?: string;
   loginOtp?: string;
-  resetPasswordOtp?:string,
+  resetPasswordOtp?: string,
   emailIsVerified: boolean;
   emailOtpExpires?: Date;
-  resetPasswordOtpExpires:Date;
+  resetPasswordOtpExpires: Date;
   currentLevel?: string;
   isApproved: boolean;
   isDisabled: boolean;
   loginOtpExpires?: Date;
   isPasswordUpdated: boolean;
   isSuperAdmin: boolean;
-  isCreator: boolean;
   staffNok?: {
     fullName?: string;
     homeAddress?: string;
@@ -72,33 +81,42 @@ export interface IStaff extends Document {
     verificationIdNumber?: string;
     verificationDocumentFile?: string;
   };
+  branchTransferHistory: TransferHistory[];
   staffKyc?: {
     verificationIdType?: 'bvn' | 'int_passport' | 'driver_license';
     verificationIdNumber?: string;
     verificationDocumentFile?: string;
   };
-  createdBy: {
-    createdByName: string;
-    createdById: string;
-    dateCreated?: Date;
-  };
-  approvedBy: {
-    approvedByName: string;
-    approvedById: string;
-    dateApproved?: Date;
-  };
+
+  createdBy: Types.ObjectId | IStaff | ICreator;
+  createdByModel: 'Creator' | 'Staffs';
+
+  updatedBy?: Types.ObjectId | IStaff | ICreator;
+  updatedByModel?: 'Creator' | 'Staffs';
+  
+
+  approvedBy?: Types.ObjectId | IStaff | ICreator;
+  approvedByModel?: 'Creator' | 'Staffs';
+
+  disabledBy?: Types.ObjectId | IStaff | ICreator;
+  disabledByModel?: 'Creator' | 'Staffs';
+
   userClass: 'initiator' | 'authorizer' | 'user';
-  staffLevel: 'super-admin'|'approver'|'marketer'|'branch-manager'|'creator'
+
+  staffLevel: 'super-admin' | 'approver' | 'marketer' | 'branch-manager'|'regular',
+
   createdAt?: Date;
   updatedAt?: Date;
+  disabledAt?: Date;
 }
 
-const staffSchema: Schema = new Schema({
+const staffSchema: Schema = new Schema<IStaff | ICreator>({
   fullName: { type: String, required: true },
   firstName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
+  branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch', default: null },
   department: { type: Schema.Types.ObjectId, ref: 'Department' },
   roles: [{ type: Schema.Types.ObjectId, ref: 'Role' }],
   homeAddress: { type: String, required: true },
@@ -114,11 +132,18 @@ const staffSchema: Schema = new Schema({
   currentLevel: { type: String },
   isApproved: { type: Boolean, default: false },
   isDisabled: { type: Boolean, default: false },
-  isDeleted: { type: Boolean, default: false },
   loginOtpExpires: { type: Date },
   isPasswordUpdated: { type: Boolean, default: false },
   isSuperAdmin: { type: Boolean, default: false },
-  isCreator: { type: Boolean, default: false },
+  branchTransferHistory: [
+    {
+      fromBranch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch' },
+      toBranch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch', required: true },
+      transferDate: { type: Date, default: Date.now },
+      reason: { type: String },
+      approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Staff' }
+    }
+  ],
   staffNok: {
     fullName: { type: String },
     homeAddress: { type: String },
@@ -142,14 +167,38 @@ const staffSchema: Schema = new Schema({
     verificationDocumentFile: { type: String }
   },
   createdBy: {
-    createdByName: { type: String, required: true },
-    createdById: { type: String, required: true },
-    dateCreated: { type: Date, default: Date.now }, // Default to current date
+    type: Schema.Types.ObjectId,
+    required: true,
+    refPath: 'createdByModel', // dynamic reference
+  },
+  createdByModel: {
+    type: String,
+    required: true,
+    enum: ['Creator', 'Staffs'], // only Creator or Staff can create
+  },
+  updatedBy: {
+    type: Schema.Types.ObjectId,
+    refPath: 'updatedByModel',
+  },
+  updatedByModel: {
+    type: String,
+    enum: ['Creator', 'Staffs'],
+  },
+  disabledBy: {
+    type: String,
+    refPath: 'disabledByModel',
+  },
+  disabledByModel: {
+    type: String,
+    enum: ['Creator', 'Staffs'],
   },
   approvedBy: {
-    approvedByName: { type: String},
-    approvedById: { type: String},
-    dateApproved: { type: Date, default: Date.now }, // Default to current date
+    type: Schema.Types.ObjectId,
+    refPath: 'approvedByModel',
+  },
+  approvedByModel: {
+    type: String,
+    enum: ['Creator', 'Staffs'],
   },
   userClass: {
     type: String,
@@ -159,7 +208,7 @@ const staffSchema: Schema = new Schema({
   staffLevel: {
     type: String,
     required: true,
-    enum: ['super-admin', 'approver', 'marketer','branch-manager','creator'],
+    enum: ['super-admin', 'approver', 'marketer', 'branch-manager','regular'],
   }
 },
   {
@@ -169,5 +218,5 @@ const staffSchema: Schema = new Schema({
       versionKey: false, // removes __v
     }
   })
-staffSchema.index({ 'staffNok.nokPhoneNumber': 1 }, { unique: true, sparse: true });
+staffSchema.index({email:1,phoneNumber:1,'staffNok.nokPhoneNumber': 1,organization:1 }, { unique: true, sparse: true });
 export default mongoose.model<IStaff>('Staffs', staffSchema);

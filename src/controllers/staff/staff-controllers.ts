@@ -1,57 +1,78 @@
 import { Request, Response } from "express";
-import User, { IStaff } from "../models/Staff";
+import User, { IStaff } from "../../models/Staff";
 import bcrypt from 'bcryptjs';
-import { sendStaffWelcomeEmail, sendSuperAdminWelcomeEmail } from "../services/email/emailTypesHandler";
+import { sendStaffWelcomeEmail, sendSuperAdminWelcomeEmail } from "../../services/email/emailTypesHandler";
 import moment from "moment";
-import { IStaffCreationEmail, ISuperAdminCreationEmail } from "../interfaces/email";
-import Staff from "../models/Staff";
-import Organization from "../models/Organization";
+import { IStaffCreationEmail, ISuperAdminCreationEmail } from "../../interfaces/email";
+import Staff from "../../models/Staff";
+import { Organization } from "../../models/Organization";
 import { Parser } from 'json2csv';
 import mongoose from "mongoose";
+import { sendStaffCreatedEmail } from "../../services/email/staff/staff-emailNotifs";
+import { Department } from "../../models/Department.model";
+import Role from "../../models/Role";
+import { Creator } from "../../models/Creator.model";
 
 
 
 
-export const registerSuperAdmin = async (req: Request, res: Response) => {
+export const registerSuperAdmin = async (req: Request, res: Response): Promise<any> => {
     const {
         fullName,
         organization,
         department,
-        roles,
+        role,
         email,
         password,
         homeAddress,
         lga,
         state,
         phoneNumber,
-        isApproved,
-        approvedByName,
-        approvedById,
-        approvedByEmail,
-        createdByName,
-        createdByEmail,
-        createdById,
+        createdBy,
+        createdByModel,
         userClass,
         staffLevel,
-        isSuperAdmin,
         description
 
     } = req.body;
 
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPass = password.trim();
     // console.log({ posted: req.body });
     try {
         const organizationExists = await Organization.findById(organization);
         if (!organizationExists) {
-            res.status(400).json({ success: false, message: 'Organization does not exist' });
-            return;
-        }
-        const existingStaff = await Staff.findOne({ organization, email });
-        if (existingStaff) {
-            res.status(400).json({ success: false, message: 'User already exists in this organization' });
-            return;
+            return res.status(400).json({ success: false, message: 'Organization does not exist' });
+
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const creatorExists = await Creator.findById(createdBy);
+        if (!creatorExists) {
+            return res.status(400).json({ success: false, message: 'Un Authorized!' });
+
+        }
+
+        const deptExists = await Department.findById(department);
+        if (!deptExists) {
+            return res.status(400).json({ success: false, message: 'Department does not exist' });
+
+        }
+        const roleExists = await Role.findById(role);
+        if (!roleExists) {
+            return res.status(400).json({ success: false, message: 'Role not found' });
+        }
+
+        if (!deptExists) {
+            return res.status(400).json({ success: false, message: 'Department not found' });
+
+        }
+        const existingStaff = await Staff.findOne({ email: normalizedEmail, organization });
+        if (existingStaff) {
+            return res.status(400).json({ success: false, message: 'User already exists in this organization' });
+
+        }
+
+        const hashedPassword = await bcrypt.hash(normalizedPass, 10);
         const firstName = fullName.split(' ')[0];
 
         const staff = await Staff.create({
@@ -59,48 +80,36 @@ export const registerSuperAdmin = async (req: Request, res: Response) => {
             firstName,
             organization,
             department,
-            roles,
-            email,
+            roles: [role],
+            email: normalizedEmail,
             password: hashedPassword,
             homeAddress,
             lga,
             state,
             phoneNumber,
-            isApproved,
             userClass,
             staffLevel,
-            isSuperAdmin,
-            approvedBy: {
-                approvedByName,
-                approvedById,
-            },
-            createdBy: {
-                createdByName,
-                createdById,
-            },
+            isSuperAdmin: true,
+            createdBy,
+            createdByModel,
             description,
         });
 
-
-        const emailPayload: ISuperAdminCreationEmail = {
-            firstName,
-            loginEmail: email,
-            tempPass: password,
-            createdByName,
-            createdByEmail,
-            approvedByName,
-            approvedByEmail,
-            userClass,
-            staffLevel,
-            nameOfOrg: organizationExists.nameOfOrg,
-            currentTime: moment().format('DD/MM/YYYY HH:MM A'),
-        }
-
         try {
-            await sendSuperAdminWelcomeEmail(emailPayload)
-        } catch (error) {
-            console.error('Error sending role creation email:', error);
-
+            await sendStaffCreatedEmail({
+                email: staff.email,
+                firstName: staff.firstName,
+                password: normalizedPass,
+                nameOfOrg: organizationExists.name,
+                staffLevel: staff.staffLevel,
+                staffRole: roleExists?.name,
+                staffDept: deptExists.name,
+                staffClass: staff.userClass,
+                logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
+                footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
+            });
+        } catch (emailErr) {
+            console.error('Error sending welcome email:', emailErr);
         }
 
 
@@ -111,54 +120,63 @@ export const registerSuperAdmin = async (req: Request, res: Response) => {
 };
 
 
-export const createStaff = async (req: Request, res: Response) => {
+export const createStaff = async (req: Request, res: Response): Promise<any> => {
     const {
         fullName,
-        email,
-        phoneNumber,
-        homeAddress,
-        state,
-        lga,
-        description,
-        tempPass,
-
-        verificationIdType,
-        verificationIdNumber,
-
         organization,
         department,
         role,
-
-        createdByName,
-        createdById,
-
+        email,
+        password,
+        homeAddress,
+        lga,
+        state,
+        phoneNumber,
+        createdBy,
+        createdByModel,
         userClass,
         staffLevel,
-
-        nokFullName,
-        nokHomeAddress,
-        nokState,
-        nokLga,
-        nokPhoneNumber,
-        nokVerificationIdType,
-        nokVerificationIdNumber
+        description
 
     } = req.body;
 
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPass = password.trim();
     // console.log({ posted: req.body });
     try {
         const organizationExists = await Organization.findById(organization);
         if (!organizationExists) {
-            res.status(400).json({ success: false, message: 'Organization does not exist' });
-            return;
-        }
-        const existingStaff = await Staff.findOne({ organization, email });
-        if (existingStaff) {
-            res.status(400).json({ success: false, message: 'User already exists in this organization' });
-            return;
+            return res.status(400).json({ success: false, message: 'Organization does not exist' });
+
         }
 
-        const hashedPassword = await bcrypt.hash(tempPass, 10);
+        const staffExists = await Staff.findById(createdBy);
+        if (!staffExists) {
+            return res.status(400).json({ success: false, message: 'Un Authorized!' });
+
+        }
+
+        const deptExists = await Department.findById(department);
+        if (!deptExists) {
+            return res.status(400).json({ success: false, message: 'Department does not exist' });
+
+        }
+        const roleExists = await Role.findById(role);
+        if (!roleExists) {
+            return res.status(400).json({ success: false, message: 'Role not found' });
+        }
+
+        if (!deptExists) {
+            return res.status(400).json({ success: false, message: 'Department not found' });
+
+        }
+        const existingStaff = await Staff.findOne({ email: normalizedEmail, organization });
+        if (existingStaff) {
+            return res.status(400).json({ success: false, message: 'User already exists in this organization' });
+
+        }
+
+        const hashedPassword = await bcrypt.hash(normalizedPass, 10);
         const firstName = fullName.split(' ')[0];
 
         const staff = await Staff.create({
@@ -166,8 +184,8 @@ export const createStaff = async (req: Request, res: Response) => {
             firstName,
             organization,
             department,
-            roles: role,
-            email,
+            roles: [role],
+            email: normalizedEmail,
             password: hashedPassword,
             homeAddress,
             lga,
@@ -175,55 +193,38 @@ export const createStaff = async (req: Request, res: Response) => {
             phoneNumber,
             userClass,
             staffLevel,
-            createdBy: {
-                createdByName,
-                createdById,
-            },
-            staffNok: {
-                fullName: nokFullName,
-                homeAddress: nokHomeAddress,
-                lga: nokLga,
-                state: nokState,
-                nokPhoneNumber: nokPhoneNumber,
-                verificationIdType: nokVerificationIdType,
-                verificationIdNumber: nokVerificationIdNumber
-            },
-            staffKyc: {
-                verificationIdType:verificationIdType,
-                verificationIdNumber: verificationIdNumber
-            },
+            isSuperAdmin: true,
+            createdBy,
+            createdByModel,
             description,
         });
 
-
-        const emailPayload: IStaffCreationEmail = {
-            firstName,
-            loginEmail: email,
-            tempPass: tempPass,
-            userClass,
-            staffLevel,
-            nameOfOrg: organizationExists.nameOfOrg,
-            currentTime: moment().format('DD/MM/YYYY HH:MM A'),
-        }
-
         try {
-            await sendStaffWelcomeEmail(emailPayload)
-        } catch (error) {
-            console.error('Error sending role creation email:', error);
-
+            await sendStaffCreatedEmail({
+                email: staff.email,
+                firstName: staff.firstName,
+                password: normalizedPass,
+                nameOfOrg: organizationExists.name,
+                staffLevel: staff.staffLevel,
+                staffRole: roleExists?.name,
+                staffDept: deptExists.name,
+                staffClass: staff.userClass,
+                logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
+                footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
+            });
+        } catch (emailErr) {
+            console.error('Error sending welcome email:', emailErr);
         }
 
 
         res.status(201).json({ success: true, message: 'User registered successfully', payload: staff });
-        return ;
     } catch (err) {
         res.status(500).json({ success: false, message: 'Server error', payload: err });
-        return ;
     }
 };
 
 export const getStaffs = async (req: Request, res: Response) => {
-    console.log('Registered models:', mongoose.modelNames());
+    // console.log('Registered models:', mongoose.modelNames());
     try {
         const {
             organisationId,
@@ -247,7 +248,7 @@ export const getStaffs = async (req: Request, res: Response) => {
         const filter: any = {};
 
         // Basic filters
-        if (organisationId) filter.Organizations = organisationId;
+        if (organisationId) filter.Organization = organisationId;
         if (departmentId) filter.department = departmentId;
         if (roleId) filter.roles = roleId;
         if (approvalStatus === 'approved') filter.isApproved = true;
@@ -283,14 +284,14 @@ export const getStaffs = async (req: Request, res: Response) => {
 
         // Dropdown mode
         if (mode === 'dropdown') {
-            const results = await Staff.find(filter, '_id fullName').sort(sortOptions);
+            const results = await Staff.find(filter, 'id fullName').sort(sortOptions);
             res.status(200).json({ success: true, payload: results });
             return;
         }
 
         // Main query
         const staffs = await Staff.find(filter)
-            .populate('organization', 'nameOfOrg', 'Organizations')
+            .populate('organization', 'name')
             .populate('department', 'name')
             .populate('roles', 'title')
             .sort(sortOptions)

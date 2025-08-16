@@ -4,36 +4,42 @@ import { Department } from '../models/Department.model';
 import { sendDeptCreationEmail } from '../services/email/emailTypesHandler';
 import moment from 'moment';
 import { IDepartment } from '../interfaces/department.interface';
-import Organization from '../models/Organization';
+import {Organization} from '../models/Organization';
+import { Creator } from '../models/Creator.model';
+import { sendOrganizationCreatedEmail, sendOrgDeptCreationEmail } from '../services/email/organization/organization-emailNotifs';
+import mongoose from 'mongoose';
+import Staff from '../models/Staff';
 
 
 
 export const createAdminDepartment = async (req: Request, res: Response): Promise<any> => {
-  try {
-    const {
-      nameOfOrg,
-      orgEmail,
-      nameOfDep,
-      organization,
-      createdByName,
-      isApproved,
+  const {
+      name,
+      organizationId,
       createdById,
-      approvedByName,
-      approvedById,
       description,
-      creatorId
+      createdByModel 
     } = req.body;
+  try {
+    
 
-    // 🔐 Authorization check
-    if (creatorId !== process.env.CREATOR_ID) {
-      return res.status(401).json({
+    const creatorExist = await Creator.findById(createdById);
+    if(!creatorExist) {
+      return res.status(400).json({
         success: false,
-        message: 'Unauthorized Access'
+        message: 'Un Authorized Access'
+      });
+    }
+    const isDuplicate = await Department.findOne({ name, organization: organizationId });
+    if(isDuplicate){
+      return res.status(400).json({
+        success: false,
+        message: 'Department already exists'
       });
     }
 
     // 🏢 Check if organization exists
-    const orgExists = await Organization.findById(organization);
+    const orgExists = await Organization.findById(organizationId);
     if (!orgExists) {
       return res.status(400).json({
         success: false,
@@ -41,48 +47,30 @@ export const createAdminDepartment = async (req: Request, res: Response): Promis
       });
     }
 
-    // 🔁 Check for duplicate department
-    const deptExists = await Department.findOne({ nameOfDep });
-    if (deptExists) {
-      return res.status(400).json({
-        success: false,
-        message: 'Department already exists'
-      });
-    }
+    await Organization.create({
+      name,
+      organizationId,
+      createdBy: createdById,
+      createdByModel,
+      description,
+    })
 
-    // ✅ Create department
-    const newDept: Partial<IDepartment> = await Department.create({
-      nameOfOrg,
-      orgEmail,
-      nameOfDep,
-      organization,
-      createdBy: {
-        createdByName,
-        createdById
-      },
-      approvedBy: {
-        approvedByName,
-        approvedById
-      },
-      isApproved,
-      description
-    });
+   await sendOrgDeptCreationEmail({
+      nameOfDept:name,
+      nameOfOrg: orgExists.name,
+      orgEmail:orgExists.email,
+      createdByName: creatorExist.fullName,
+      createdByEmail: creatorExist.email,
+      orgPrimaryColor: orgExists.primaryColor || '#ffffff',
+        logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
+        footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
+    })
 
-    // 📧 Send notification email (non-blocking)
-    sendDeptCreationEmail(
-      nameOfOrg,
-      orgEmail,
-      nameOfDep,
-      moment().format('DD/MM/YYYY hh:mm A'),
-      createdByName
-    ).catch((emailErr) => {
-      console.error('Error sending welcome email:', emailErr);
-    });
 
     return res.status(201).json({
       success: true,
       message: 'Department created successfully',
-      payload: newDept
+      payload: {}
     });
 
   } catch (err) {
@@ -97,92 +85,167 @@ export const createAdminDepartment = async (req: Request, res: Response): Promis
 
 
 
-export const a= async (req: Request, res: Response) => {
+export const createDepartment = async (req: Request, res: Response) :Promise<any>=> {
+  const { nameOfDept,organizationId,createdBy,description,createdByModel} = req.body;
 
   try {
-    const { nameOfOrg,orgEmail,nameOfDep, organization, createdByName, isApproved, createdById, approvedByName, approvedById, description, creatorId } = req.body;
+    
+    let userExist = await Creator.findById(createdBy);
+if (!userExist) {
+  userExist = await Staff.findById(createdBy);
+}
 
-    if (creatorId != process.env.CREATOR_ID) {
-      res.status(401).json({ success: false, message: 'Un Authorised Access' });
+    if(!userExist) {
+      return res.status(400).json({ success: false, message: 'Un Authorized Access' });
     }
-    const exists = await Department.findOne({ nameOfDep });
-    if (exists) {
-      res.status(400).json({ success: false, message: 'Department already exists' });
+
+    const orgExist = await Organization.findById(organizationId);
+    
+    if(!orgExist) {
+      res.status(400).json({ success: false, message: 'Un Authorized Access' });
+      return res.json({ success: false, message: 'Un Authorized Access' });
     }
-    const dept: Partial<IDepartment> = await Department.create({
-      nameOfOrg,
-      orgEmail,
-      nameOfDep,
-      organization,
-      createdBy: {
-        createdByName,
-        createdById
-      },
-      approvedBy: {
-        approvedByName,
-        approvedById
-      },
-      isApproved,
-      description,
-    });
 
-    // Send welcome email (don't block response if it fails)
-    try {
-      // (name, email,moment().format('DD/MM/YYYY HH:MM A'));
-      await sendDeptCreationEmail(nameOfOrg, orgEmail,nameOfDep,moment().format('DD/MM/YYYY HH:MM A'),createdByName)
-    } catch (emailErr) {
-      console.error('Error sending welcome email:', emailErr);
-    }
-    res.status(201).json({ success: true, message: 'Department Created!', payload: dept });
-  } catch (error) {
-    res.status(400).json({ success: false, message: 'Error creating department', payload: {see:error} });
-  }
-};
-
-
-export const createDepartment = async (req: Request, res: Response) => {
-
-  try {
-    const { nameOfOrg,orgEmail,nameOfDep, organization, createdByName,createdById,approvedById, description} = req.body;
-
-    if (!createdById) {
-      res.status(401).json({ success: false, message: 'Un Authorised Access' });
-      return ;
-    }
-    const exists = await Department.findOne({ nameOfDep });
+    const exists = await Department.findOne({ nameOfDept, organization: organizationId });
     if (exists) {
       res.status(400).json({ success: false, message: 'Department already exists' });
       return ;
     }
-    const dept: Partial<IDepartment> = await Department.create({
-      nameOfOrg,
-      orgEmail,
-      nameOfDep,
-      organization,
-      createdBy: {
-        createdByName,
-        createdById
-      },
-      approvedBy: {
-        approvedById
-      },
+    await Department.create({
+      name:nameOfDept,
+      organization: organizationId,
+      createdBy,
+      createdByModel,
       description,
     });
 
-    // Send welcome email (don't block response if it fails)
-    try {
-      // (name, email,moment().format('DD/MM/YYYY HH:MM A'));
-      await sendDeptCreationEmail(nameOfOrg, orgEmail,nameOfDep,moment().format('DD/MM/YYYY HH:MM A'),createdByName)
+     try {
+      await sendOrgDeptCreationEmail({
+        nameOfDept,
+        createdByName: userExist.fullName,
+        createdByEmail: userExist.email,
+        nameOfOrg: orgExist.name,
+        orgEmail: orgExist.email,
+        logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
+        footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
+      });
     } catch (emailErr) {
       console.error('Error sending welcome email:', emailErr);
     }
-    res.status(201).json({ success: true, message: 'Department Created!', payload: dept });
+
+    res.status(201).json({ success: true, message: 'Department Created!', payload: {}});
   } catch (error) {
     res.status(400).json({ success: false, message: 'Error creating department', payload: error });
   }
 };
 
-export const getDepartmentsByOrganizationId = async (req: Request, res: Response) => {
+export const getDepartments = async (req: Request, res: Response): Promise<any> => {
+  try {
+    let {
+      page = "1",
+      limit = "10",
+      organizationId,
+      searchByName,
+      statusOf,
+    } = req.query;
+
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    if (!organizationId || !mongoose.Types.ObjectId.isValid(organizationId as string)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid organizationId is required",
+      });
+    }
+
+    // Build filters with proper ObjectId
+    const filters: any = {
+      organization: new mongoose.Types.ObjectId(organizationId as string),
+    };
+
+    if (searchByName) {
+      filters.name = { $regex: searchByName as string, $options: "i" };
+    }
+
+    if (statusOf !== undefined) {
+      filters.isApproved = statusOf === "true";
+    }
+
+    const [departments, total] = await Promise.all([
+      Department.find(filters)
+        .skip(skip)
+        .limit(limitNum)
+        .sort({ createdAt: -1 }),
+      Department.countDocuments(filters),
+    ]);
+
+    // let filteredDept = departments.map((dept)=>dept.name!=='S')
+    return res.status(200).json({
+      success: true,
+      message: "Departments fetched successfully",
+      payload: departments,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error,
+    });
+  }
+};
+
+export const getSingleDeptById = async (req: Request, res: Response): Promise<any>  => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid department ID" });
+    }
+
+    const department = await Department.findById(id);
+    if (!department) {
+      return res.status(404).json({ success: false, message: "Department not found" });
+    }
+
+    return res.status(200).json({ success: true, message: "Department fetched", data: department });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server Error", error });
+  }
+};
+
+export const updateDepartment = async (req: Request, res: Response): Promise<any>  => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid department ID" });
+    }
+
+    const department = await Department.findByIdAndUpdate(id, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!department) {
+      return res.status(404).json({ success: false, message: "Department not found" });
+    }
+
+    return res.status(200).json({ success: true, message: "Department updated", data: department });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server Error", error });
+  }
+};
+
+export const getDepartmentsByOrganizationId = async (req: Request, res: Response): Promise<any>  => {
   try {
     const { organizationId } = req.params;
     const departments = await Department.find({ organization: organizationId });
@@ -193,7 +256,7 @@ export const getDepartmentsByOrganizationId = async (req: Request, res: Response
 
     let depts = departments.map((depts)=>({
       value:depts._id,
-      label:depts.nameOfDep
+      label:depts.name
     }))
 
     res.status(200).json({success:true,payload:depts});
@@ -203,7 +266,7 @@ export const getDepartmentsByOrganizationId = async (req: Request, res: Response
 };
 
 
-export const getAllDepartments = async (req: Request, res: Response) => {
+export const getAllDepartments = async (req: Request, res: Response) : Promise<any> => {
   try {
     const departments = await Department.find().populate('organization');
     res.status(200).json(departments);
@@ -222,17 +285,7 @@ export const getDepartmentById = async (req: Request, res: Response) => {
   }
 };
 
-export const updateDepartment = async (req: Request, res: Response) => {
-  try {
-    const department = await Department.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!department) res.status(404).json({ message: 'Department not found' });
-    res.status(200).json(department);
-  } catch (error) {
-    res.status(400).json({ message: 'Error updating department', error });
-  }
-};
-
-export const deleteDepartment = async (req: Request, res: Response) => {
+export const deleteDepartment = async (req: Request, res: Response): Promise<any>  => {
   try {
     const department = await Department.findByIdAndDelete(req.params.id);
     if (!department) res.status(404).json({ message: 'Department not found' });

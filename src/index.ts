@@ -5,14 +5,15 @@ import connectDB from './config/db';
 import morgan from 'morgan';
 
 import authRoutes from './routes/auth.routes';
-import orgRoutes from './routes/org.routes';
+import orgRoutes from './routes/organization/org.routes';
 import roleRoutes from './routes/role.routes';
 import userRoleRoutes from './routes/userRole.routes';
 import departmentRoutes from './routes/department.routes';
-import staffRoutes from './routes/staff.routes';
+import staffRoutes from './routes/staff/staff.routes';
 import stateRoutes from './routes/stateRoutes';
 import branchRoutes from './routes/branch-routes/branch.routes';
-import Organization from './models/Organization';
+import creatorRoutes from './routes/creator/creator.routes';
+import permissionRoutes from './routes/permissions/permission.route'
 
 dotenv.config();
 
@@ -34,7 +35,9 @@ app.use(cors({
 app.use(express.json());
 
 const apiPrefix = '/api/v1/';
+
 // Routes
+app.use(apiPrefix, creatorRoutes);
 app.use(apiPrefix, orgRoutes);
 app.use(apiPrefix, branchRoutes);
 app.use(apiPrefix, departmentRoutes);
@@ -42,7 +45,9 @@ app.use(apiPrefix, roleRoutes);
 app.use(apiPrefix, staffRoutes);
 app.use(apiPrefix, authRoutes);
 app.use(apiPrefix, userRoleRoutes);
-app.use(apiPrefix, stateRoutes); // updated
+app.use(apiPrefix, stateRoutes);
+app.use(apiPrefix, permissionRoutes);
+
 
 // Server
 const PORT = process.env.PORT || 5000;

@@ -19,7 +19,7 @@ const otpUtils_1 = require("../../utils/otpUtils");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const emailTypesHandler_1 = require("../../services/email/emailTypesHandler");
-const Organization_1 = __importDefault(require("../../models/Organization"));
+const Organization_1 = require("../../models/Organization");
 const Department_model_1 = require("../../models/Department.model");
 const Role_1 = __importDefault(require("../../models/Role"));
 const loginStaff = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -94,7 +94,7 @@ const verifyLoginOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
             userClass: staff.userClass,
         };
         const token = jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
-        const organization = yield Organization_1.default.findById(staff.organization);
+        const organization = yield Organization_1.Organization.findById(staff.organization);
         const staffDepartment = yield Department_model_1.Department.findById(staff.department);
         const staffRole = yield Role_1.default.findById(staff.roles[0]);
         let staffData = {
@@ -102,7 +102,10 @@ const verifyLoginOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
             fullName: staff === null || staff === void 0 ? void 0 : staff.fullName,
             firstName: staff === null || staff === void 0 ? void 0 : staff.firstName,
             department: staff === null || staff === void 0 ? void 0 : staff.department,
+            organization: staff.organization,
+            role: staff.roles[0],
             staffLevel: staff === null || staff === void 0 ? void 0 : staff.staffLevel,
+            userClass: staff.userClass,
             staffNokInformation: staff === null || staff === void 0 ? void 0 : staff.staffNok,
             staffKycInformation: staff === null || staff === void 0 ? void 0 : staff.staffKyc,
             homeAddress: staff === null || staff === void 0 ? void 0 : staff.homeAddress,
@@ -110,35 +113,34 @@ const verifyLoginOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
             isApproved: staff === null || staff === void 0 ? void 0 : staff.isApproved,
             isDisabled: staff.isDisabled,
             emailIsVerified: staff === null || staff === void 0 ? void 0 : staff.emailIsVerified,
-            isCreator: staff === null || staff === void 0 ? void 0 : staff.isCreator,
             isSuperAdmin: staff === null || staff === void 0 ? void 0 : staff.isSuperAdmin,
             isPasswordUpdated: staff === null || staff === void 0 ? void 0 : staff.isPasswordUpdated,
             lga: staff === null || staff === void 0 ? void 0 : staff.lga,
             state: staff === null || staff === void 0 ? void 0 : staff.state,
-            createdAt: organization === null || organization === void 0 ? void 0 : organization.createdAt,
-            updatedAt: organization === null || organization === void 0 ? void 0 : organization.updatedAt,
+            createdAt: staff === null || staff === void 0 ? void 0 : staff.createdAt,
+            updatedAt: staff === null || staff === void 0 ? void 0 : staff.updatedAt,
         };
         let organisationData = {
             id: organization === null || organization === void 0 ? void 0 : organization._id,
-            nameOfOrg: organization === null || organization === void 0 ? void 0 : organization.nameOfOrg,
-            orgEmail: organization === null || organization === void 0 ? void 0 : organization.orgEmail,
-            orgAddress: organization === null || organization === void 0 ? void 0 : organization.orgAddress,
-            orgLga: organization === null || organization === void 0 ? void 0 : organization.orgLga,
-            orgState: organization === null || organization === void 0 ? void 0 : organization.orgState,
-            orgPhoneNumber: `0${organization === null || organization === void 0 ? void 0 : organization.orgPhoneNumber}`,
-            orgSubscriptionPlan: organization === null || organization === void 0 ? void 0 : organization.orgSubscriptionPlan,
-            orgRegNumber: organization === null || organization === void 0 ? void 0 : organization.orgRegNumber,
+            nameOfOrg: organization === null || organization === void 0 ? void 0 : organization.name,
+            orgEmail: organization === null || organization === void 0 ? void 0 : organization.email,
+            orgAddress: organization === null || organization === void 0 ? void 0 : organization.address,
+            orgLga: organization === null || organization === void 0 ? void 0 : organization.lga,
+            orgState: organization === null || organization === void 0 ? void 0 : organization.state,
+            orgPhoneNumber: `0${organization === null || organization === void 0 ? void 0 : organization.phoneNumber}`,
+            orgSubscriptionPlan: organization === null || organization === void 0 ? void 0 : organization.subscriptionPlan,
+            orgRegNumber: organization === null || organization === void 0 ? void 0 : organization.regNumber,
             createdAt: organization === null || organization === void 0 ? void 0 : organization.createdAt,
             updatedAt: organization === null || organization === void 0 ? void 0 : organization.updatedAt
         };
         let staffDepartmentData = {
             id: staffDepartment === null || staffDepartment === void 0 ? void 0 : staffDepartment.id,
-            nameofDept: staffDepartment === null || staffDepartment === void 0 ? void 0 : staffDepartment.nameOfDep,
+            name: staffDepartment === null || staffDepartment === void 0 ? void 0 : staffDepartment.name,
         };
         let staffRoleData = {
             id: staffRole === null || staffRole === void 0 ? void 0 : staffRole.id,
-            nameofRole: staffRole === null || staffRole === void 0 ? void 0 : staffRole.roleName,
-            staffPermisions: staffRole === null || staffRole === void 0 ? void 0 : staffRole.rolePermissions
+            name: staffRole === null || staffRole === void 0 ? void 0 : staffRole.name,
+            permisions: staffRole === null || staffRole === void 0 ? void 0 : staffRole.permissions
         };
         res.status(200).json({
             success: true,

@@ -7,7 +7,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { sendLoginOtpEmail, sendResetPasswordOtpEmail } from '../../services/email/emailTypesHandler';
 
-import Organization from '../../models/Organization';
+import {Organization} from '../../models/Organization';
 import { Department } from '../../models/Department.model';
 import Role from '../../models/Role';
 
@@ -118,7 +118,10 @@ export const verifyLoginOtp = async (req: Request, res: Response) => {
       fullName: staff?.fullName,
       firstName: staff?.firstName,
       department: staff?.department,
+      organization:staff.organization,
+      role:staff.roles[0],
       staffLevel:staff?.staffLevel,
+      userClass:staff.userClass,
       staffNokInformation:staff?.staffNok,
       staffKycInformation:staff?.staffKyc,
       homeAddress:staff?.homeAddress,
@@ -126,37 +129,35 @@ export const verifyLoginOtp = async (req: Request, res: Response) => {
       isApproved:staff?.isApproved,
       isDisabled:staff.isDisabled,
       emailIsVerified:staff?.emailIsVerified,
-      isCreator:staff?.isCreator,
       isSuperAdmin:staff?.isSuperAdmin,
       isPasswordUpdated:staff?.isPasswordUpdated,
       lga:staff?.lga,
       state:staff?.state,
-      createdAt: organization?.createdAt,
-      updatedAt: organization?.updatedAt,
+      createdAt: staff?.createdAt,
+      updatedAt: staff?.updatedAt,
     };
     let organisationData = {
       id: organization?._id,
-      nameOfOrg: organization?.nameOfOrg,
-      orgEmail: organization?.orgEmail,
-      orgAddress: organization?.orgAddress,
-      orgLga: organization?.orgLga,
-      orgState: organization?.orgState,
-      orgPhoneNumber: `0${organization?.orgPhoneNumber}`,
-      orgSubscriptionPlan: organization?.orgSubscriptionPlan,
-      orgRegNumber: organization?.orgRegNumber,
+      nameOfOrg: organization?.name,
+      orgEmail: organization?.email,
+      orgAddress: organization?.address,
+      orgLga: organization?.lga,
+      orgState: organization?.state,
+      orgPhoneNumber: `0${organization?.phoneNumber}`,
+      orgSubscriptionPlan: organization?.subscriptionPlan,
+      orgRegNumber: organization?.regNumber,
       createdAt: organization?.createdAt,
       updatedAt: organization?.updatedAt
     }
     let staffDepartmentData = {
       id: staffDepartment?.id,
-      nameofDept: staffDepartment?.nameOfDep,
-
+      name: staffDepartment?.name,
     }
 
     let staffRoleData = {
       id: staffRole?.id,
-      nameofRole: staffRole?.roleName,
-      staffPermisions: staffRole?.rolePermissions
+      name: staffRole?.name,
+      permisions: staffRole?.permissions
     }
 
     res.status(200).json({

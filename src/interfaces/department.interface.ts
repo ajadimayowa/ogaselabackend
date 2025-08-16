@@ -1,18 +1,19 @@
-import mongoose, { Document } from 'mongoose';
+import mongoose, { Document,Schema,Types } from 'mongoose';
+import { IStaff } from '../models/Staff';
+import { ICreator } from '../models/Creator.model';
 
 export interface IDepartment extends Document {
-  nameOfOrg: string;
-  orgEmail: string;
-  nameOfDep: string;
-  organization: mongoose.Types.ObjectId;
-  createdBy: {
-    createdByName: string;
-    createdById: string;
-  };
-  isApproved?: boolean;
-  approvedBy?: {
-    approvedByName: string;
-    approvedById: string;
-  };
+  id: string;
+  name: string;
+  organization: Schema.Types.ObjectId; // link to Organization
+  createdBy: Types.ObjectId | IStaff | ICreator;
+  createdByModel: 'Creator' | 'Staffs';
+  createdAt: Date;
+  updatedByModel?: 'Creator' | 'Staffs';
+  updatedBy?:  Types.ObjectId | IStaff | ICreator; // if you want the same flexibility here
+  updatedAt?: Date;
   description: string;
+  isApproved: boolean;
+  approvedBy?: Schema.Types.ObjectId; // Optional, can be null if not approved
+  isDisabled: boolean;
 }

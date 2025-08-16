@@ -47,6 +47,7 @@ const staffSchema = new mongoose_1.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     organization: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Organization' },
+    branch: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'Branch', default: null },
     department: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Department' },
     roles: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'Role' }],
     homeAddress: { type: String, required: true },
@@ -62,11 +63,18 @@ const staffSchema = new mongoose_1.Schema({
     currentLevel: { type: String },
     isApproved: { type: Boolean, default: false },
     isDisabled: { type: Boolean, default: false },
-    isDeleted: { type: Boolean, default: false },
     loginOtpExpires: { type: Date },
     isPasswordUpdated: { type: Boolean, default: false },
     isSuperAdmin: { type: Boolean, default: false },
-    isCreator: { type: Boolean, default: false },
+    branchTransferHistory: [
+        {
+            fromBranch: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'Branch' },
+            toBranch: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'Branch', required: true },
+            transferDate: { type: Date, default: Date.now },
+            reason: { type: String },
+            approvedBy: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'Staff' }
+        }
+    ],
     staffNok: {
         fullName: { type: String },
         homeAddress: { type: String },
@@ -90,14 +98,38 @@ const staffSchema = new mongoose_1.Schema({
         verificationDocumentFile: { type: String }
     },
     createdBy: {
-        createdByName: { type: String, required: true },
-        createdById: { type: String, required: true },
-        dateCreated: { type: Date, default: Date.now }, // Default to current date
+        type: mongoose_1.Schema.Types.ObjectId,
+        required: true,
+        refPath: 'createdByModel', // dynamic reference
+    },
+    createdByModel: {
+        type: String,
+        required: true,
+        enum: ['Creator', 'Staffs'], // only Creator or Staff can create
+    },
+    updatedBy: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        refPath: 'updatedByModel',
+    },
+    updatedByModel: {
+        type: String,
+        enum: ['Creator', 'Staffs'],
+    },
+    disabledBy: {
+        type: String,
+        refPath: 'disabledByModel',
+    },
+    disabledByModel: {
+        type: String,
+        enum: ['Creator', 'Staffs'],
     },
     approvedBy: {
-        approvedByName: { type: String },
-        approvedById: { type: String },
-        dateApproved: { type: Date, default: Date.now }, // Default to current date
+        type: mongoose_1.Schema.Types.ObjectId,
+        refPath: 'approvedByModel',
+    },
+    approvedByModel: {
+        type: String,
+        enum: ['Creator', 'Staffs'],
     },
     userClass: {
         type: String,
@@ -107,7 +139,7 @@ const staffSchema = new mongoose_1.Schema({
     staffLevel: {
         type: String,
         required: true,
-        enum: ['super-admin', 'approver', 'marketer', 'branch-manager', 'creator'],
+        enum: ['super-admin', 'approver', 'marketer', 'branch-manager', 'regular'],
     }
 }, {
     timestamps: true,
@@ -116,5 +148,5 @@ const staffSchema = new mongoose_1.Schema({
         versionKey: false, // removes __v
     }
 });
-staffSchema.index({ 'staffNok.nokPhoneNumber': 1 }, { unique: true, sparse: true });
+staffSchema.index({ email: 1, phoneNumber: 1, 'staffNok.nokPhoneNumber': 1, organization: 1 }, { unique: true, sparse: true });
 exports.default = mongoose_1.default.model('Staffs', staffSchema);

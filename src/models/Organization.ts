@@ -1,60 +1,75 @@
-import mongoose, { Schema, Document } from 'mongoose';
+// models/Organization.ts
+import { Schema, Document, model } from 'mongoose';
 
 export interface IOrganization extends Document {
-  nameOfOrg: string;
-  orgEmail: string;
-  orgAddress: string;
-  orgLga: string;
-  orgState: string;
-  orgPhoneNumber: number | string;
-  createdByName:string;
-  createdByEmail: string;
-  createdAt:Date,
+  id: string;
+  name: string;
+  email: string;
+  address: string;
+  lga: string;
+  state: string;
+  phoneNumber: number | string;
+  createdBy: Schema.Types.ObjectId; // Only store creator's ID
+  createdAt: Date;
+  updatedBy?: Schema.Types.ObjectId;
+  updatedByModel?: 'Creator' | 'Staffs';
   updatedAt?: Date;
-  updatedBy?: string;
   isDisabled?: boolean;
   isDeleted?: boolean;
-  orgSubscriptionPlan?: 'basic' | 'standard' | 'pro';
-  orgRegNumber:string;
-  organisationLogo?: string;
-  organisationPrimaryColor?: string;
-  organisationSecondaryColor?: string;
+  subscriptionPlan?: 'basic' | 'standard' | 'pro';
+  regNumber: string;
+  logo?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  description?: string;
 }
 
-const organizationSchema = new Schema<IOrganization>(
+const OrganizationSchema = new Schema<IOrganization>(
   {
-    nameOfOrg: { type: String, required: true },
-    orgEmail: { type: String, required: true, unique: true },
-    orgPhoneNumber: { type: String, required: true }, // changed to string for flexibility
-    orgAddress: { type: String, required: true },
-    orgLga: { type: String, required: true },
-    orgState: { type: String, required: true },
-    orgRegNumber: { type: String, required: true },
-    createdByName: { type: String, required: true },
-    createdByEmail: { type: String, required: true },
-    updatedBy: { type: Schema.Types.ObjectId, ref: 'Users' },
+    name: { type: String, required: true, trim: true, unique: true },
+    email: { type: String, required: true, lowercase: true, trim: true, unique: true },
+    address: { type: String, required: true },
+    lga: { type: String, required: true },
+    state: { type: String, required: true },
+    phoneNumber: { type: Schema.Types.Mixed, required: true },
+
+    createdBy: { type: Schema.Types.ObjectId, ref: 'Creator', required: true },
+    
+    updatedBy: { type: Schema.Types.ObjectId, ref: 'Creator' },
+    updatedByModel: {
+      type: String,
+      enum: ['Creator', 'Staffs'],
+    },
+
     isDisabled: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
-    orgSubscriptionPlan: {
+
+    subscriptionPlan: {
       type: String,
       enum: ['basic', 'standard', 'pro'],
-      default: 'basic',
+      default: 'pro',
     },
-    organisationLogo: { type: String },
-    organisationPrimaryColor: { type: String },
-    organisationSecondaryColor: { type: String },
+
+    regNumber: { type: String, required: true, unique: true },
+    logo: { type: String },
+    primaryColor: { type: String },
+    secondaryColor: { type: String },
+    description: { type: String },
   },
   {
     timestamps: true,
     toJSON: {
       virtuals: true,
       versionKey: false,
-      transform: (_doc, ret) => {
-        ret.id = ret._id;
+      transform: function (_doc, ret: any) {
+        ret.id = ret._id.toString();
         delete ret._id;
+        return ret;
       },
     },
   }
 );
 
-export default mongoose.model<IOrganization>('Organization', organizationSchema);
+OrganizationSchema.index({ name: 1, email: 1 }, { unique: true });
+
+export const Organization = model<IOrganization>('Organization', OrganizationSchema);

@@ -12,62 +12,59 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteDepartment = exports.updateDepartment = exports.getDepartmentById = exports.getAllDepartments = exports.getDepartmentsByOrganizationId = exports.createDepartment = exports.a = exports.createAdminDepartment = void 0;
+exports.deleteDepartment = exports.getDepartmentById = exports.getAllDepartments = exports.getDepartmentsByOrganizationId = exports.updateDepartment = exports.getSingleDeptById = exports.getDepartments = exports.createDepartment = exports.createAdminDepartment = void 0;
 const Department_model_1 = require("../models/Department.model");
-const emailTypesHandler_1 = require("../services/email/emailTypesHandler");
-const moment_1 = __importDefault(require("moment"));
-const Organization_1 = __importDefault(require("../models/Organization"));
+const Organization_1 = require("../models/Organization");
+const Creator_model_1 = require("../models/Creator.model");
+const organization_emailNotifs_1 = require("../services/email/organization/organization-emailNotifs");
+const mongoose_1 = __importDefault(require("mongoose"));
+const Staff_1 = __importDefault(require("../models/Staff"));
 const createAdminDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, organizationId, createdById, description, createdByModel } = req.body;
     try {
-        const { nameOfOrg, orgEmail, nameOfDep, organization, createdByName, isApproved, createdById, approvedByName, approvedById, description, creatorId } = req.body;
-        // 🔐 Authorization check
-        if (creatorId !== process.env.CREATOR_ID) {
-            return res.status(401).json({
+        const creatorExist = yield Creator_model_1.Creator.findById(createdById);
+        if (!creatorExist) {
+            return res.status(400).json({
                 success: false,
-                message: 'Unauthorized Access'
+                message: 'Un Authorized Access'
+            });
+        }
+        const isDuplicate = yield Department_model_1.Department.findOne({ name, organization: organizationId });
+        if (isDuplicate) {
+            return res.status(400).json({
+                success: false,
+                message: 'Department already exists'
             });
         }
         // 🏢 Check if organization exists
-        const orgExists = yield Organization_1.default.findById(organization);
+        const orgExists = yield Organization_1.Organization.findById(organizationId);
         if (!orgExists) {
             return res.status(400).json({
                 success: false,
                 message: 'Organization does not exist'
             });
         }
-        // 🔁 Check for duplicate department
-        const deptExists = yield Department_model_1.Department.findOne({ nameOfDep });
-        if (deptExists) {
-            return res.status(400).json({
-                success: false,
-                message: 'Department already exists'
-            });
-        }
-        // ✅ Create department
-        const newDept = yield Department_model_1.Department.create({
-            nameOfOrg,
-            orgEmail,
-            nameOfDep,
-            organization,
-            createdBy: {
-                createdByName,
-                createdById
-            },
-            approvedBy: {
-                approvedByName,
-                approvedById
-            },
-            isApproved,
-            description
+        yield Organization_1.Organization.create({
+            name,
+            organizationId,
+            createdBy: createdById,
+            createdByModel,
+            description,
         });
-        // 📧 Send notification email (non-blocking)
-        (0, emailTypesHandler_1.sendDeptCreationEmail)(nameOfOrg, orgEmail, nameOfDep, (0, moment_1.default)().format('DD/MM/YYYY hh:mm A'), createdByName).catch((emailErr) => {
-            console.error('Error sending welcome email:', emailErr);
+        yield (0, organization_emailNotifs_1.sendOrgDeptCreationEmail)({
+            nameOfDept: name,
+            nameOfOrg: orgExists.name,
+            orgEmail: orgExists.email,
+            createdByName: creatorExist.fullName,
+            createdByEmail: creatorExist.email,
+            orgPrimaryColor: orgExists.primaryColor || '#ffffff',
+            logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
+            footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
         });
         return res.status(201).json({
             success: true,
             message: 'Department created successfully',
-            payload: newDept
+            payload: {}
         });
     }
     catch (err) {
@@ -80,88 +77,143 @@ const createAdminDepartment = (req, res) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 exports.createAdminDepartment = createAdminDepartment;
-const a = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { nameOfOrg, orgEmail, nameOfDep, organization, createdByName, isApproved, createdById, approvedByName, approvedById, description, creatorId } = req.body;
-        if (creatorId != process.env.CREATOR_ID) {
-            res.status(401).json({ success: false, message: 'Un Authorised Access' });
-        }
-        const exists = yield Department_model_1.Department.findOne({ nameOfDep });
-        if (exists) {
-            res.status(400).json({ success: false, message: 'Department already exists' });
-        }
-        const dept = yield Department_model_1.Department.create({
-            nameOfOrg,
-            orgEmail,
-            nameOfDep,
-            organization,
-            createdBy: {
-                createdByName,
-                createdById
-            },
-            approvedBy: {
-                approvedByName,
-                approvedById
-            },
-            isApproved,
-            description,
-        });
-        // Send welcome email (don't block response if it fails)
-        try {
-            // (name, email,moment().format('DD/MM/YYYY HH:MM A'));
-            yield (0, emailTypesHandler_1.sendDeptCreationEmail)(nameOfOrg, orgEmail, nameOfDep, (0, moment_1.default)().format('DD/MM/YYYY HH:MM A'), createdByName);
-        }
-        catch (emailErr) {
-            console.error('Error sending welcome email:', emailErr);
-        }
-        res.status(201).json({ success: true, message: 'Department Created!', payload: dept });
-    }
-    catch (error) {
-        res.status(400).json({ success: false, message: 'Error creating department', payload: { see: error } });
-    }
-});
-exports.a = a;
 const createDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { nameOfDept, organizationId, createdBy, description, createdByModel } = req.body;
     try {
-        const { nameOfOrg, orgEmail, nameOfDep, organization, createdByName, createdById, approvedById, description } = req.body;
-        if (!createdById) {
-            res.status(401).json({ success: false, message: 'Un Authorised Access' });
-            return;
+        let userExist = yield Creator_model_1.Creator.findById(createdBy);
+        if (!userExist) {
+            userExist = yield Staff_1.default.findById(createdBy);
         }
-        const exists = yield Department_model_1.Department.findOne({ nameOfDep });
+        if (!userExist) {
+            return res.status(400).json({ success: false, message: 'Un Authorized Access' });
+        }
+        const orgExist = yield Organization_1.Organization.findById(organizationId);
+        if (!orgExist) {
+            res.status(400).json({ success: false, message: 'Un Authorized Access' });
+            return res.json({ success: false, message: 'Un Authorized Access' });
+        }
+        const exists = yield Department_model_1.Department.findOne({ nameOfDept, organization: organizationId });
         if (exists) {
             res.status(400).json({ success: false, message: 'Department already exists' });
             return;
         }
-        const dept = yield Department_model_1.Department.create({
-            nameOfOrg,
-            orgEmail,
-            nameOfDep,
-            organization,
-            createdBy: {
-                createdByName,
-                createdById
-            },
-            approvedBy: {
-                approvedById
-            },
+        yield Department_model_1.Department.create({
+            name: nameOfDept,
+            organization: organizationId,
+            createdBy,
+            createdByModel,
             description,
         });
-        // Send welcome email (don't block response if it fails)
         try {
-            // (name, email,moment().format('DD/MM/YYYY HH:MM A'));
-            yield (0, emailTypesHandler_1.sendDeptCreationEmail)(nameOfOrg, orgEmail, nameOfDep, (0, moment_1.default)().format('DD/MM/YYYY HH:MM A'), createdByName);
+            yield (0, organization_emailNotifs_1.sendOrgDeptCreationEmail)({
+                nameOfDept,
+                createdByName: userExist.fullName,
+                createdByEmail: userExist.email,
+                nameOfOrg: orgExist.name,
+                orgEmail: orgExist.email,
+                logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
+                footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
+            });
         }
         catch (emailErr) {
             console.error('Error sending welcome email:', emailErr);
         }
-        res.status(201).json({ success: true, message: 'Department Created!', payload: dept });
+        res.status(201).json({ success: true, message: 'Department Created!', payload: {} });
     }
     catch (error) {
         res.status(400).json({ success: false, message: 'Error creating department', payload: error });
     }
 });
 exports.createDepartment = createDepartment;
+const getDepartments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let { page = "1", limit = "10", organizationId, searchByName, statusOf, } = req.query;
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+        const skip = (pageNum - 1) * limitNum;
+        if (!organizationId || !mongoose_1.default.Types.ObjectId.isValid(organizationId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Valid organizationId is required",
+            });
+        }
+        // Build filters with proper ObjectId
+        const filters = {
+            organization: new mongoose_1.default.Types.ObjectId(organizationId),
+        };
+        if (searchByName) {
+            filters.name = { $regex: searchByName, $options: "i" };
+        }
+        if (statusOf !== undefined) {
+            filters.isApproved = statusOf === "true";
+        }
+        const [departments, total] = yield Promise.all([
+            Department_model_1.Department.find(filters)
+                .skip(skip)
+                .limit(limitNum)
+                .sort({ createdAt: -1 }),
+            Department_model_1.Department.countDocuments(filters),
+        ]);
+        // let filteredDept = departments.map((dept)=>dept.name!=='S')
+        return res.status(200).json({
+            success: true,
+            message: "Departments fetched successfully",
+            payload: departments,
+            pagination: {
+                total,
+                page: pageNum,
+                limit: limitNum,
+                totalPages: Math.ceil(total / limitNum),
+            },
+        });
+    }
+    catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Server Error",
+            error,
+        });
+    }
+});
+exports.getDepartments = getDepartments;
+const getSingleDeptById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid department ID" });
+        }
+        const department = yield Department_model_1.Department.findById(id);
+        if (!department) {
+            return res.status(404).json({ success: false, message: "Department not found" });
+        }
+        return res.status(200).json({ success: true, message: "Department fetched", data: department });
+    }
+    catch (error) {
+        return res.status(500).json({ success: false, message: "Server Error", error });
+    }
+});
+exports.getSingleDeptById = getSingleDeptById;
+const updateDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid department ID" });
+        }
+        const department = yield Department_model_1.Department.findByIdAndUpdate(id, updates, {
+            new: true,
+            runValidators: true,
+        });
+        if (!department) {
+            return res.status(404).json({ success: false, message: "Department not found" });
+        }
+        return res.status(200).json({ success: true, message: "Department updated", data: department });
+    }
+    catch (error) {
+        return res.status(500).json({ success: false, message: "Server Error", error });
+    }
+});
+exports.updateDepartment = updateDepartment;
 const getDepartmentsByOrganizationId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { organizationId } = req.params;
@@ -171,7 +223,7 @@ const getDepartmentsByOrganizationId = (req, res) => __awaiter(void 0, void 0, v
         }
         let depts = departments.map((depts) => ({
             value: depts._id,
-            label: depts.nameOfDep
+            label: depts.name
         }));
         res.status(200).json({ success: true, payload: depts });
     }
@@ -202,18 +254,6 @@ const getDepartmentById = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getDepartmentById = getDepartmentById;
-const updateDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const department = yield Department_model_1.Department.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!department)
-            res.status(404).json({ message: 'Department not found' });
-        res.status(200).json(department);
-    }
-    catch (error) {
-        res.status(400).json({ message: 'Error updating department', error });
-    }
-});
-exports.updateDepartment = updateDepartment;
 const deleteDepartment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const department = yield Department_model_1.Department.findByIdAndDelete(req.params.id);

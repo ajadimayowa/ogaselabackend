@@ -1,6 +1,6 @@
 // src/middleware/subscription.middleware.ts
 import { Request, Response, NextFunction } from 'express';
-import Organization from '../models/Organization';
+import { Organization } from '../models/Organization';
 
 export const checkModuleAccess = (requiredPlan: 'basic' | 'pro') => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -10,7 +10,7 @@ export const checkModuleAccess = (requiredPlan: 'basic' | 'pro') => {
       if (!org) return res.status(404).json({ msg: 'Organization not found' });
 
       const plans = ['basic', 'standard', 'pro'];
-      const orgPlan = org?.orgSubscriptionPlan ?? '';
+      const orgPlan = org?.subscriptionPlan ?? '';
       const hasAccess = plans.indexOf(orgPlan) >= plans.indexOf(requiredPlan);
 
       if (!hasAccess) {

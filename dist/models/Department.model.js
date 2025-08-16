@@ -2,32 +2,39 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Department = void 0;
 const mongoose_1 = require("mongoose");
-const departmentSchema = new mongoose_1.Schema({
-    nameOfOrg: { type: String, required: true },
-    nameOfDep: { type: String, required: true },
-    orgEmail: { type: String, required: true },
+const DepartmentSchema = new mongoose_1.Schema({
+    name: { type: String, required: true, trim: true },
     organization: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Organization', required: true },
     createdBy: {
-        createdByName: { type: String, required: true },
-        createdById: { type: String, required: true },
-        dateCreated: { type: Date, default: Date.now }, // Default to current date
+        type: mongoose_1.Schema.Types.ObjectId,
+        required: true,
+        refPath: 'createdByModel', // dynamic reference
     },
-    isApproved: { type: Boolean, default: false },
-    approvedBy: {
-        approvedByName: { type: String },
-        approvedById: { type: String, required: true },
-        dateApproved: { type: Date, default: Date.now }, // Default to current date
+    createdByModel: {
+        type: String,
+        required: true,
+        enum: ['Creator', 'Staffs'], // only Creator or Staff can create
     },
-    description: { type: String, required: true },
+    updatedBy: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        refPath: 'updatedByModel',
+    },
+    updatedByModel: {
+        type: String,
+        enum: ['Creator', 'Staffs'],
+    },
 }, {
     timestamps: true,
     toJSON: {
         virtuals: true,
-        versionKey: false, // removes __v
-        transform: (_doc, ret) => {
-            ret.id = ret._id; // rename _id to id
-            delete ret._id; // remove _id
-        }
-    }
+        versionKey: false,
+        transform: function (_doc, ret) {
+            ret.id = ret._id.toString();
+            delete ret._id;
+            return ret;
+        },
+    },
 });
-exports.Department = (0, mongoose_1.model)('Department', departmentSchema);
+// Unique index for "name" within the same "organization"
+DepartmentSchema.index({ organization: 1, name: 1 }, { unique: true });
+exports.Department = (0, mongoose_1.model)('Department', DepartmentSchema);
