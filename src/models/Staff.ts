@@ -116,7 +116,7 @@ const staffSchema: Schema = new Schema<IStaff | ICreator>({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
-  branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch', default: null },
+  branch: { type: Schema.Types.ObjectId, ref: 'Branch', default: null },
   department: { type: Schema.Types.ObjectId, ref: 'Department' },
   roles: [{ type: Schema.Types.ObjectId, ref: 'Role' }],
   homeAddress: { type: String, required: true },
@@ -215,8 +215,13 @@ const staffSchema: Schema = new Schema<IStaff | ICreator>({
     timestamps: true,
     toJSON: {
       virtuals: true,
-      versionKey: false, // removes __v
-    }
+      versionKey: false,
+      transform: function (_doc, ret: any) {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        return ret;
+      },
+    },
   })
 staffSchema.index({email:1,phoneNumber:1,'staffNok.nokPhoneNumber': 1,organization:1 }, { unique: true, sparse: true });
 export default mongoose.model<IStaff>('Staffs', staffSchema);

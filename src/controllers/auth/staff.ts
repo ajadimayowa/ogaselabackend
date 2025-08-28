@@ -77,7 +77,8 @@ export const verifyLoginOtp = async (req: Request, res: Response) => {
   // console.log({email, otp});
 
   try {
-    const staff = await Staff.findOne({ email: email.trim().toLowerCase() });
+    const staff = await Staff.findOne({ email: email.trim().toLowerCase() })
+  .populate("branch", "name"); // or "branchName" depending on your Branch schema
     console.log({ seeStaffHere: staff })
     // const organisation = Organization.findById(staff?.organization)
 
@@ -116,6 +117,9 @@ export const verifyLoginOtp = async (req: Request, res: Response) => {
     let staffData = {
       id: staff?._id,
       fullName: staff?.fullName,
+       branch: staff?.branch
+    ? staff.branch
+    : null,
       firstName: staff?.firstName,
       department: staff?.department,
       organization:staff.organization,

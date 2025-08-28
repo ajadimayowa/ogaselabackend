@@ -223,7 +223,7 @@ export const createStaff = async (req: Request, res: Response): Promise<any> => 
     }
 };
 
-export const getStaffs = async (req: Request, res: Response) => {
+export const getStaffs = async (req: Request, res: Response) : Promise<any> => {
     // console.log('Registered models:', mongoose.modelNames());
     try {
         const {
@@ -245,10 +245,12 @@ export const getStaffs = async (req: Request, res: Response) => {
             mode,
         } = req.query;
 
+        console.log({hereIsId:organisationId})
+
         const filter: any = {};
 
         // Basic filters
-        if (organisationId) filter.Organization = organisationId;
+        if (organisationId) filter.organization = new mongoose.Types.ObjectId(organisationId as string);
         if (departmentId) filter.department = departmentId;
         if (roleId) filter.roles = roleId;
         if (approvalStatus === 'approved') filter.isApproved = true;
@@ -285,13 +287,14 @@ export const getStaffs = async (req: Request, res: Response) => {
         // Dropdown mode
         if (mode === 'dropdown') {
             const results = await Staff.find(filter, 'id fullName').sort(sortOptions);
-            res.status(200).json({ success: true, payload: results });
-            return;
+            return res.status(200).json({ success: true, payload: results });
+           
         }
 
         // Main query
         const staffs = await Staff.find(filter)
             .populate('organization', 'name')
+            .populate('branch', 'name')
             .populate('department', 'name')
             .populate('roles', 'title')
             .sort(sortOptions)
@@ -359,6 +362,52 @@ export const getStaffs = async (req: Request, res: Response) => {
             payload: error,
         });
     }
+};
+
+export const getStaffProfileByStaffId = async (req: Request, res: Response):Promise<any> => {
+  try {
+    const { staffId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(staffId)) {
+      return res.status(400).json({ message: "Invalid staff ID" });
+    }
+
+    const staff = await Staff.findById(staffId)
+      .populate("organization", "name") // only select organization name
+      .populate("branch", "name") // customize fields
+      .populate("department", "departmentName")
+      .populate("roles", "roleName")
+      .populate("createdBy", "fullName email")
+      .populate("updatedBy", "fullName email")
+      .populate("approvedBy", "fullName email")
+      .populate("disabledBy", "fullName email")
+      .lean();
+
+    if (!staff) {
+      return res.status(404).json({ message: "Staff not found" });
+    }
+
+    const staffData= {
+        id:staff?._id,
+        fullName:staff?.fullName,
+         branch: staff.branch
+        ? staff.branch
+        : null,
+    }
+
+    return res.status(200).json({
+    success:true,
+      message: "Staff profile retrieved successfully",
+      payload:staffData,
+    });
+  } catch (error: any) {
+    console.error("Error fetching staff profile:", error);
+    return res.status(500).json({
+        success:false,
+      message: "Server error while retrieving staff profile",
+      error: error.message,
+    });
+  }
 };
 
 
