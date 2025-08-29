@@ -1,99 +1,117 @@
 // controllers/groupController.ts
 import { Request, Response } from "express";
 import Group from "../../models/Group";
+import mongoose from "mongoose";
+import Member from "../../models/Member";
 
 export const createGroup = async (req: Request, res: Response):Promise<any> => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const { groupName, organizationId, branchId, groupMembers} = req.body;
+    const { groupName, description, createdBy, organizationId,branchId, groupMembers } = req.body;
 
-    // ✅ Check if groupName already exists in same branch/org
-    const existingGroup = await Group.findOne({ groupName, organizationId, branchId });
-    if (existingGroup) {
-      return res.status(400).json({ message: "Group name already exists in this branch and organization" });
-    }
+    // 1. Create group
+    const group = await Group.create(
+      [{ groupName, description, createdBy,branch:branchId, organization:organizationId }],
+      { session }
+    );
 
-    // ✅ Check for duplicate BVN across org
-    for (const member of groupMembers) {
-      const bvnExists = await Group.findOne({
-        organizationId,
-        "groupMembers.bvn": member.bvn,
-      });
-      if (bvnExists) {
-        return res.status(400).json({ message: `BVN ${member.bvn} already exists in this organization` });
-      }
-    }
+    // console.log({seeGroup:group})
+    const groupId = group[0]._id;
 
-    // ✅ Calculate totals
-    const totalAmountBorrowed = groupMembers.reduce((sum:any, m:any) => sum + (m.loanAmount || 0), 0);
-    const totalAmountRefunded = groupMembers.reduce((sum:any, m:any) => sum + (m.loanAmount || 0), 0);
+    // 2. Create members and link to group
+    const newMembers = await Member.insertMany(
+     groupMembers.map((m: any) => ({
+        ...m,
+        group: groupId,
+        organization:organizationId,
+        branch:branchId
+      })),
+      { session }
+    );
 
-    const newGroup = new Group({
-      groupName,
-      organization:organizationId,
-      branch:branchId,
-      groupMembers,
-      totalAmountBorrowed,
-      totalAmountRefunded,
+    // console.log({seeTHem:newMembers})
+
+    // 3. Update group with member IDs
+    group[0].groupMembers = newMembers.map((m) => m._id);
+    group[0].totalAmountBorrowed = newMembers.reduce((sum: number, m: any) => sum + (m.amountBorrowed || 0), 0);
+    group[0].totalAmountRefunded = newMembers.reduce((sum: number, m: any) => sum + (m.amountRefunded || 0), 0);
+    await group[0].save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(201).json({ message: "Group created successfully", group: group[0] });
+  } catch (err: any) {
+    await session.abortTransaction();
+    session.endSession();
+    res.status(400).json({ error: err.message });
+  }
+};
+
+/** Get Groups with Filters + Pagination */
+export const getGroups = async (req: Request, res: Response):Promise<any>  => {
+  try {
+    const { organizationId, createdBy, branchId, status, page = 1, limit = 10 } = req.query;
+
+    const filter: any = {};
+    if (organizationId) filter.organization = organizationId;
+    if (createdBy) filter.createdBy = createdBy;
+    if (branchId) filter.branch = branchId;
+    if (status) filter.status = status;
+
+    const groups = await Group.find(filter)
+      .populate("groupMembers")
+      .skip((+page - 1) * +limit)
+      .limit(+limit)
+      .sort({ createdAt: -1 });
+
+    const total = await Group.countDocuments(filter);
+
+    res.status(200).json({
+      data: groups,
+      pagination: {
+        total,
+        page: +page,
+        limit: +limit,
+        totalPages: Math.ceil(total / +limit),
+      },
     });
-
-    await newGroup.save();
-    res.status(201).json(newGroup);
-  } catch (error: any) {
-    res.status(500).json({ message: "Error creating group", error: error.message });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 };
 
-export const getGroups = async (req: Request, res: Response):Promise<any> => {
+export const getGroupById = async (req: Request, res: Response):Promise<any>  => {
   try {
-    const groups = await Group.find().populate("organizationId branchId");
-    res.status(200).json(groups);
-  } catch (error: any) {
-    res.status(500).json({ message: "Error fetching groups", error: error.message });
+    const group = await Group.findById(req.params.groupId).populate("members");
+    if (!group) return res.status(404).json({ error: "Group not found" });
+    res.json(group);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 };
 
-export const getGroupById = async (req: Request, res: Response):Promise<any> => {
+/** Update Group */
+export const updateGroup = async (req: Request, res: Response):Promise<any>  => {
   try {
-    const group = await Group.findById(req.params.id).populate("organizationId branchId");
-    if (!group) return res.status(404).json({ message: "Group not found" });
-    res.status(200).json(group);
-  } catch (error: any) {
-    res.status(500).json({ message: "Error fetching group", error: error.message });
+    const group = await Group.findByIdAndUpdate(req.params.groupId, req.body, { new: true });
+    if (!group) return res.status(404).json({ error: "Group not found" });
+    res.json({ message: "Group updated", group });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 };
 
-export const updateGroup = async (req: Request, res: Response):Promise<any> => {
+/** Delete Group */
+export const deleteGroup = async (req: Request, res: Response):Promise<any>  => {
   try {
-    const group = await Group.findById(req.params.id);
-    if (!group) return res.status(404).json({ message: "Group not found" });
-
-    const { groupName, groupMembers } = req.body;
-
-    if (groupName && groupName !== group.groupName) {
-      const duplicate = await Group.findOne({ groupName, organizationId: group.organization, branchId: group.branch });
-      if (duplicate) return res.status(400).json({ message: "Group name already exists in this branch" });
-      group.groupName = groupName;
-    }
-
-    if (groupMembers) {
-      group.groupMembers = groupMembers;
-      group.totalAmountBorrowed = groupMembers.reduce((sum:any, m:any) => sum + (m.amountBorrowed || 0), 0);
-      group.totalAmountRefunded = groupMembers.reduce((sum:any, m:any) => sum + (m.amountRefunded || 0), 0);
-    }
-
-    await group.save();
-    res.status(200).json(group);
-  } catch (error: any) {
-    res.status(500).json({ message: "Error updating group", error: error.message });
-  }
-};
-
-export const deleteGroup = async (req: Request, res: Response):Promise<any> => {
-  try {
-    const deleted = await Group.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "Group not found" });
-    res.status(200).json({ message: "Group deleted successfully" });
-  } catch (error: any) {
-    res.status(500).json({ message: "Error deleting group", error: error.message });
+    const group = await Group.findByIdAndDelete(req.params.groupId);
+    if (!group) return res.status(404).json({ error: "Group not found" });
+    await Member.deleteMany({ group: group._id }); // cleanup members
+    res.json({ message: "Group deleted" });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 };

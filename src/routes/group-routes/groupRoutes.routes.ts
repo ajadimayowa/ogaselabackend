@@ -6,7 +6,7 @@ import { verifyToken } from "../../middleware/auth.middleware";
 const router = express.Router();
 
 router.post("/group/create",verifyToken, createGroup);
-router.get("/",verifyToken, getGroups);
+router.get("/groups",verifyToken, getGroups);
 router.get("/:id",verifyToken, getGroupById);
 router.put("/:id",verifyToken, updateGroup);
 router.delete("/:id",verifyToken, deleteGroup);

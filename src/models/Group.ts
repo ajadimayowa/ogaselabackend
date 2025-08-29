@@ -15,7 +15,7 @@ export interface IGroup extends Document {
   disabledBy?: mongoose.Types.ObjectId;
   organization: mongoose.Types.ObjectId;
   branch: mongoose.Types.ObjectId;
-  groupMembers: IGroupMembers[];
+  groupMembers: mongoose.Types.ObjectId[];
   createdBy: mongoose.Types.ObjectId;
   updatedBy: mongoose.Types.ObjectId;
   totalAmountBorrowed: number;   // cumulative borrowed by all members
@@ -34,15 +34,7 @@ const GroupSchema: Schema = new Schema(
     organization: { type: Schema.Types.ObjectId, ref: "Organization", required: true },
     branch: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
 
-    groupMembers: [
-  {
-    fullName: { type: String, required: true },
-    bvn: { type: String, required: true },
-    phoneNumber: { type: String, required: true },
-    loanAmount: { type: Number, required: true },
-    email: { type: String, required: true },
-  }
-],
+    groupMembers:[{ type: Schema.Types.ObjectId, ref: "Member" }],
 
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
@@ -52,6 +44,14 @@ const GroupSchema: Schema = new Schema(
   },
   { timestamps: true }
 );
+
+// Automatically calculate totals
+GroupSchema.methods.calculateTotals = async function () {
+  const members = await mongoose.model("Member").find({ group: this._id });
+  this.totalLoanAmount = members.reduce((sum, m) => sum + m.loanAmount, 0);
+  this.totalAmountRepaid = members.reduce((sum, m) => sum + m.amountRepaid, 0);
+  await this.save();
+};
 
 // ✅ Prevent duplicate group names inside the same org+branch
 GroupSchema.index({ organization: 1, branch: 1, groupName: 1 }, { unique: true });
