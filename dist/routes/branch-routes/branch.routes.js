@@ -8,6 +8,6 @@ router.post("/branch", auth_middleware_1.verifyToken, auth_middleware_1.isSuperA
 router.get("/branches", auth_middleware_1.verifyToken, auth_middleware_1.isSuperAdmin, branch_controller_1.getBranches);
 router.get("/branch/:id", auth_middleware_1.verifyToken, auth_middleware_1.isSuperAdmin, branch_controller_1.getBranchById);
 router.put("/branch/:id", auth_middleware_1.verifyToken, auth_middleware_1.isSuperAdmin, branch_controller_1.updateBranch);
-router.delete("branch/:id", auth_middleware_1.verifyToken, auth_middleware_1.isSuperAdmin, branch_controller_1.deleteBranch);
-router.post("branch/add-staff", auth_middleware_1.verifyToken, auth_middleware_1.isSuperAdmin, branch_controller_1.addStaffToBranch);
+router.delete("/branch/:id", auth_middleware_1.verifyToken, auth_middleware_1.isSuperAdmin, branch_controller_1.deleteBranch);
+router.post("/branch/add-staff", auth_middleware_1.verifyToken, auth_middleware_1.isSuperAdmin, branch_controller_1.addStaffToBranch);
 exports.default = router;

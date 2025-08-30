@@ -7,8 +7,8 @@ const router = express.Router();
 
 router.post("/group/create",verifyToken, createGroup);
 router.get("/groups",verifyToken, getGroups);
-router.get("/:id",verifyToken, getGroupById);
-router.put("/:id",verifyToken, updateGroup);
-router.delete("/:id",verifyToken, deleteGroup);
+router.get("/group/:id",verifyToken, getGroupById);
+router.put("/group/:id",verifyToken, updateGroup);
+router.delete("/group/:id",verifyToken, deleteGroup);
 
 export default router;

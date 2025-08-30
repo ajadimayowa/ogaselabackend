@@ -12,11 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getStaffs = exports.createStaff = exports.registerSuperAdmin = void 0;
+exports.getStaffProfileByStaffId = exports.getStaffs = exports.createStaff = exports.registerSuperAdmin = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const Staff_1 = __importDefault(require("../../models/Staff"));
 const Organization_1 = require("../../models/Organization");
 const json2csv_1 = require("json2csv");
+const mongoose_1 = __importDefault(require("mongoose"));
 const staff_emailNotifs_1 = require("../../services/email/staff/staff-emailNotifs");
 const Department_model_1 = require("../../models/Department.model");
 const Role_1 = __importDefault(require("../../models/Role"));
@@ -173,10 +174,11 @@ const getStaffs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('Registered models:', mongoose.modelNames());
     try {
         const { organisationId, departmentId, roleId, creationDate, approvalStatus, userClass, staffLevel, search, includeDisabled = 'false', includeDeleted = 'false', page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc', export: exportType, mode, } = req.query;
+        console.log({ hereIsId: organisationId });
         const filter = {};
         // Basic filters
         if (organisationId)
-            filter.Organization = organisationId;
+            filter.organization = new mongoose_1.default.Types.ObjectId(organisationId);
         if (departmentId)
             filter.department = departmentId;
         if (roleId)
@@ -214,12 +216,12 @@ const getStaffs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         // Dropdown mode
         if (mode === 'dropdown') {
             const results = yield Staff_1.default.find(filter, 'id fullName').sort(sortOptions);
-            res.status(200).json({ success: true, payload: results });
-            return;
+            return res.status(200).json({ success: true, payload: results });
         }
         // Main query
         const staffs = yield Staff_1.default.find(filter)
             .populate('organization', 'name')
+            .populate('branch', 'name')
             .populate('department', 'name')
             .populate('roles', 'title')
             .sort(sortOptions)
@@ -284,3 +286,45 @@ const getStaffs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getStaffs = getStaffs;
+const getStaffProfileByStaffId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { staffId } = req.params;
+        if (!mongoose_1.default.Types.ObjectId.isValid(staffId)) {
+            return res.status(400).json({ message: "Invalid staff ID" });
+        }
+        const staff = yield Staff_1.default.findById(staffId)
+            .populate("organization", "name") // only select organization name
+            .populate("branch", "name") // customize fields
+            .populate("department", "departmentName")
+            .populate("roles", "roleName")
+            .populate("createdBy", "fullName email")
+            .populate("updatedBy", "fullName email")
+            .populate("approvedBy", "fullName email")
+            .populate("disabledBy", "fullName email")
+            .lean();
+        if (!staff) {
+            return res.status(404).json({ message: "Staff not found" });
+        }
+        const staffData = {
+            id: staff === null || staff === void 0 ? void 0 : staff._id,
+            fullName: staff === null || staff === void 0 ? void 0 : staff.fullName,
+            branch: staff.branch
+                ? staff.branch
+                : null,
+        };
+        return res.status(200).json({
+            success: true,
+            message: "Staff profile retrieved successfully",
+            payload: staffData,
+        });
+    }
+    catch (error) {
+        console.error("Error fetching staff profile:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error while retrieving staff profile",
+            error: error.message,
+        });
+    }
+});
+exports.getStaffProfileByStaffId = getStaffProfileByStaffId;

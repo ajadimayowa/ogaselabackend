@@ -47,7 +47,7 @@ const staffSchema = new mongoose_1.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     organization: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Organization' },
-    branch: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'Branch', default: null },
+    branch: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Branch', default: null },
     department: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Department' },
     roles: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'Role' }],
     homeAddress: { type: String, required: true },
@@ -145,8 +145,13 @@ const staffSchema = new mongoose_1.Schema({
     timestamps: true,
     toJSON: {
         virtuals: true,
-        versionKey: false, // removes __v
-    }
+        versionKey: false,
+        transform: function (_doc, ret) {
+            ret.id = ret._id.toString();
+            delete ret._id;
+            return ret;
+        },
+    },
 });
 staffSchema.index({ email: 1, phoneNumber: 1, 'staffNok.nokPhoneNumber': 1, organization: 1 }, { unique: true, sparse: true });
 exports.default = mongoose_1.default.model('Staffs', staffSchema);

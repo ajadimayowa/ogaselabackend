@@ -9,6 +9,7 @@ const router = (0, express_1.Router)();
 router.post('/staff/create-superadmin', auth_middleware_1.verifyRootAdminToken, staff_controllers_1.registerSuperAdmin);
 router.post('/staff/create', auth_middleware_1.verifyToken, auth_middleware_1.isSuperAdmin, staff_controllers_1.createStaff);
 router.get('/staff/staffs', auth_middleware_1.verifyToken, staff_controllers_1.getStaffs);
+router.get('/staff/:staffId', auth_middleware_1.verifyToken, staff_controllers_1.getStaffProfileByStaffId);
 router.post('/staff/login', staff_1.loginStaff);
 router.post('/staff/verify-otp', staff_1.verifyLoginOtp);
 router.post('/staff/request-password-reset-otp', staff_1.requestPasswordResetOtp);

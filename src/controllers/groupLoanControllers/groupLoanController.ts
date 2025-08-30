@@ -26,7 +26,8 @@ export const createGroup = async (req: Request, res: Response):Promise<any> => {
         ...m,
         group: groupId,
         organization:organizationId,
-        branch:branchId
+        branch:branchId,
+        totalAmountBorrowed: m.loanAmount || 0,
       })),
       { session }
     );
@@ -35,8 +36,7 @@ export const createGroup = async (req: Request, res: Response):Promise<any> => {
 
     // 3. Update group with member IDs
     group[0].groupMembers = newMembers.map((m) => m._id);
-    group[0].totalAmountBorrowed = newMembers.reduce((sum: number, m: any) => sum + (m.amountBorrowed || 0), 0);
-    group[0].totalAmountRefunded = newMembers.reduce((sum: number, m: any) => sum + (m.amountRefunded || 0), 0);
+    group[0].totalAmountBorrowed = newMembers.reduce((sum: number, m: any) => sum + (m.totalAmountBorrowed || 20000), 0);
     await group[0].save({ session });
 
     await session.commitTransaction();
@@ -84,8 +84,9 @@ export const getGroups = async (req: Request, res: Response):Promise<any>  => {
 };
 
 export const getGroupById = async (req: Request, res: Response):Promise<any>  => {
+  const {id} = req.params
   try {
-    const group = await Group.findById(req.params.groupId).populate("members");
+    const group = await Group.findById(id).populate("groupMembers");
     if (!group) return res.status(404).json({ error: "Group not found" });
     res.json(group);
   } catch (err: any) {

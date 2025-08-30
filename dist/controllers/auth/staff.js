@@ -70,7 +70,8 @@ const verifyLoginOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const { email, otp } = req.body;
     // console.log({email, otp});
     try {
-        const staff = yield Staff_1.default.findOne({ email: email.trim().toLowerCase() });
+        const staff = yield Staff_1.default.findOne({ email: email.trim().toLowerCase() })
+            .populate("branch", "name"); // or "branchName" depending on your Branch schema
         console.log({ seeStaffHere: staff });
         // const organisation = Organization.findById(staff?.organization)
         if (!staff) {
@@ -100,6 +101,9 @@ const verifyLoginOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
         let staffData = {
             id: staff === null || staff === void 0 ? void 0 : staff._id,
             fullName: staff === null || staff === void 0 ? void 0 : staff.fullName,
+            branch: (staff === null || staff === void 0 ? void 0 : staff.branch)
+                ? staff.branch
+                : null,
             firstName: staff === null || staff === void 0 ? void 0 : staff.firstName,
             department: staff === null || staff === void 0 ? void 0 : staff.department,
             organization: staff.organization,
