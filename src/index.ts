@@ -14,7 +14,8 @@ import stateRoutes from './routes/stateRoutes';
 import branchRoutes from './routes/branch-routes/branch.routes';
 import creatorRoutes from './routes/creator/creator.routes';
 import permissionRoutes from './routes/permissions/permission.route';
-import groupRoutes from './routes/group-routes/groupRoutes.routes'
+import groupRoutes from './routes/group-routes/groupRoutes.routes';
+import memberRoutes from './routes/customer-routes/customer.routes'
 
 dotenv.config();
 
@@ -49,6 +50,7 @@ app.use(apiPrefix, userRoleRoutes);
 app.use(apiPrefix, stateRoutes);
 app.use(apiPrefix, permissionRoutes);
 app.use(apiPrefix, groupRoutes);
+app.use(apiPrefix, memberRoutes);
 
 
 // Server

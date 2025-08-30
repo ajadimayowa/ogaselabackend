@@ -49,13 +49,13 @@ export const getMembers = async (req: Request, res: Response) => {
 };
 
 /** Get Member by ID */
-export const getMemberById = async (req: Request, res: Response) => {
+export const getMemberById = async (req: Request, res: Response):Promise<any>=> {
   try {
-    const member = await Member.findById(req.params.memberId).populate("group");
+    const member = await Member.findById(req.params.id).populate("group");
     if (!member) return res.status(404).json({ error: "Member not found" });
-    res.json(member);
+    return res.status(201).json({success:true,payload:member,message:'success'});
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+   return  res.status(400).json({ error: err.message });
   }
 };
 
@@ -68,9 +68,9 @@ export const updateMember = async (req: Request, res: Response) => {
     const group = await Group.findById(member.group);
     // if (group) await group.calculateTotals();
 
-    res.json({ message: "Member updated", member });
+   return  res.json({ message: "Member updated", member });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+   return  res.status(400).json({ error: err.message });
   }
 };
 
