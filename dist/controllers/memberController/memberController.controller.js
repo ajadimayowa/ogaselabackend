@@ -61,13 +61,13 @@ exports.getMembers = getMembers;
 /** Get Member by ID */
 const getMemberById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const member = yield Member_1.default.findById(req.params.memberId).populate("group");
+        const member = yield Member_1.default.findById(req.params.id).populate("group");
         if (!member)
             return res.status(404).json({ error: "Member not found" });
-        res.json(member);
+        return res.status(201).json({ success: true, payload: member, message: 'success' });
     }
     catch (err) {
-        res.status(400).json({ error: err.message });
+        return res.status(400).json({ error: err.message });
     }
 });
 exports.getMemberById = getMemberById;
@@ -79,10 +79,10 @@ const updateMember = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             return res.status(404).json({ error: "Member not found" });
         const group = yield Group_1.default.findById(member.group);
         // if (group) await group.calculateTotals();
-        res.json({ message: "Member updated", member });
+        return res.json({ message: "Member updated", member });
     }
     catch (err) {
-        res.status(400).json({ error: err.message });
+        return res.status(400).json({ error: err.message });
     }
 });
 exports.updateMember = updateMember;

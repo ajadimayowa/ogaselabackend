@@ -19,6 +19,7 @@ const branch_routes_1 = __importDefault(require("./routes/branch-routes/branch.r
 const creator_routes_1 = __importDefault(require("./routes/creator/creator.routes"));
 const permission_route_1 = __importDefault(require("./routes/permissions/permission.route"));
 const groupRoutes_routes_1 = __importDefault(require("./routes/group-routes/groupRoutes.routes"));
+const customer_routes_1 = __importDefault(require("./routes/customer-routes/customer.routes"));
 dotenv_1.default.config();
 // Connect to DB
 (0, db_1.default)().catch((err) => {
@@ -47,6 +48,7 @@ app.use(apiPrefix, userRole_routes_1.default);
 app.use(apiPrefix, stateRoutes_1.default);
 app.use(apiPrefix, permission_route_1.default);
 app.use(apiPrefix, groupRoutes_routes_1.default);
+app.use(apiPrefix, customer_routes_1.default);
 // Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
