@@ -22,6 +22,7 @@ const emailTypesHandler_1 = require("../../services/email/emailTypesHandler");
 const Organization_1 = require("../../models/Organization");
 const Department_model_1 = require("../../models/Department.model");
 const Role_1 = __importDefault(require("../../models/Role"));
+const smsSender_1 = require("../../services/sms/smsSender");
 const loginStaff = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     try {
@@ -41,6 +42,11 @@ const loginStaff = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         staff.loginOtp = otp;
         staff.loginOtpExpires = otpExpires;
         yield staff.save();
+        yield (0, smsSender_1.sendLoginOtp)({
+            to: staff.phoneNumber,
+            code: +otp,
+            firstName: staff.firstName
+        });
         try {
             yield (0, emailTypesHandler_1.sendLoginOtpEmail)(staff.firstName, staff.email, otp);
         }
@@ -95,7 +101,8 @@ const verifyLoginOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
             userClass: staff.userClass,
         };
         const token = jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
-        const organization = yield Organization_1.Organization.findById(staff.organization);
+        const organization = yield Organization_1.Organization.findById(staff.organization)
+            .populate('businessRule');
         const staffDepartment = yield Department_model_1.Department.findById(staff.department);
         const staffRole = yield Role_1.default.findById(staff.roles[0]);
         let staffData = {
@@ -135,7 +142,8 @@ const verifyLoginOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
             orgSubscriptionPlan: organization === null || organization === void 0 ? void 0 : organization.subscriptionPlan,
             orgRegNumber: organization === null || organization === void 0 ? void 0 : organization.regNumber,
             createdAt: organization === null || organization === void 0 ? void 0 : organization.createdAt,
-            updatedAt: organization === null || organization === void 0 ? void 0 : organization.updatedAt
+            updatedAt: organization === null || organization === void 0 ? void 0 : organization.updatedAt,
+            businessRule: organization === null || organization === void 0 ? void 0 : organization.businessRule
         };
         let staffDepartmentData = {
             id: staffDepartment === null || staffDepartment === void 0 ? void 0 : staffDepartment.id,

@@ -11,6 +11,7 @@ const OrganizationSchema = new mongoose_1.Schema({
     state: { type: String, required: true },
     phoneNumber: { type: mongoose_1.Schema.Types.Mixed, required: true },
     createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Creator', required: true },
+    businessRule: { type: mongoose_1.Schema.Types.ObjectId, ref: 'BusinessRule' },
     updatedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Creator' },
     updatedByModel: {
         type: String,
