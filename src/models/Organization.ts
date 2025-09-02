@@ -10,6 +10,7 @@ export interface IOrganization extends Document {
   state: string;
   phoneNumber: number | string;
   createdBy: Schema.Types.ObjectId; // Only store creator's ID
+  businessRule?: Schema.Types.ObjectId;
   createdAt: Date;
   updatedBy?: Schema.Types.ObjectId;
   updatedByModel?: 'Creator' | 'Staffs';
@@ -34,6 +35,7 @@ const OrganizationSchema = new Schema<IOrganization>(
     phoneNumber: { type: Schema.Types.Mixed, required: true },
 
     createdBy: { type: Schema.Types.ObjectId, ref: 'Creator', required: true },
+    businessRule: { type: Schema.Types.ObjectId, ref: 'BusinessRule'},
     
     updatedBy: { type: Schema.Types.ObjectId, ref: 'Creator' },
     updatedByModel: {

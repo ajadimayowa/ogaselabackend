@@ -10,6 +10,7 @@ import { sendLoginOtpEmail, sendResetPasswordOtpEmail } from '../../services/ema
 import {Organization} from '../../models/Organization';
 import { Department } from '../../models/Department.model';
 import Role from '../../models/Role';
+import { sendLoginOtp } from '../../services/sms/smsSender';
 
 export interface IApiResponse<T = any> {
   data: {
@@ -46,6 +47,11 @@ export const loginStaff = async (req: Request, res: Response): Promise<any> => {
     staff.loginOtpExpires = otpExpires;
     await staff.save();
 
+    await sendLoginOtp({
+      to:staff.phoneNumber,
+      code:+otp,
+      firstName:staff.firstName
+    })
     try {
       await sendLoginOtpEmail(staff.firstName, staff.email, otp);
     } catch (error) {
@@ -110,7 +116,8 @@ export const verifyLoginOtp = async (req: Request, res: Response) => {
 
     const token = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
-    const organization = await Organization.findById(staff.organization);
+    const organization = await Organization.findById(staff.organization)
+    .populate('businessRule');
     const staffDepartment = await Department.findById(staff.department);
     const staffRole = await Role.findById(staff.roles[0]);
 
@@ -151,7 +158,8 @@ export const verifyLoginOtp = async (req: Request, res: Response) => {
       orgSubscriptionPlan: organization?.subscriptionPlan,
       orgRegNumber: organization?.regNumber,
       createdAt: organization?.createdAt,
-      updatedAt: organization?.updatedAt
+      updatedAt: organization?.updatedAt,
+      businessRule:organization?.businessRule
     }
     let staffDepartmentData = {
       id: staffDepartment?.id,
