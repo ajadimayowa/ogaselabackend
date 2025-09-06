@@ -60,7 +60,7 @@ export const getMemberById = async (req: Request, res: Response):Promise<any>=> 
 };
 
 /** Update Member */
-export const updateMember = async (req: Request, res: Response) => {
+export const updateMember = async (req: Request, res: Response):Promise<any> => {
   try {
     const member = await Member.findByIdAndUpdate(req.params.memberId, req.body, { new: true });
     if (!member) return res.status(404).json({ error: "Member not found" });

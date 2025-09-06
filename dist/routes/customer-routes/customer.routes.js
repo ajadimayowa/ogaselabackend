@@ -9,9 +9,10 @@ const groupLoanController_1 = require("../../controllers/groupLoanControllers/gr
 const auth_middleware_1 = require("../../middleware/auth.middleware");
 const memberController_controller_1 = require("../../controllers/memberController/memberController.controller");
 const router = express_1.default.Router();
+router.get("/member/:id", auth_middleware_1.verifyToken, memberController_controller_1.getMemberById);
+router.put("/member/:memberId", auth_middleware_1.verifyToken, memberController_controller_1.updateMember);
 router.post("/group/create", auth_middleware_1.verifyToken, groupLoanController_1.createGroup);
 router.get("/groups", auth_middleware_1.verifyToken, groupLoanController_1.getGroups);
-router.get("/member/:id", auth_middleware_1.verifyToken, memberController_controller_1.getMemberById);
 router.put("/group/:id", auth_middleware_1.verifyToken, groupLoanController_1.updateGroup);
 router.delete("/group/:id", auth_middleware_1.verifyToken, groupLoanController_1.deleteGroup);
 exports.default = router;

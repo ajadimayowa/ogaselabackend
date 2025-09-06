@@ -43,8 +43,8 @@ const registerCreatorController = async (req: Request, res: Response): Promise<a
             firstName,
             email,
             password,
-            logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
-            footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
+            logoUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/PNG+WIZBIZ+LOGO%40200x-8.png',
+            footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/wizhub-footer.png'
         }).catch((error) => {
             console.error('Error sending email:', error);
         });
@@ -96,8 +96,8 @@ const creatorLoginController = async (req: Request, res: Response): Promise<any>
         await sendCreatorLoginNotificationEmail({
             firstName: creator.firstName,
             email,
-            logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
-            footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
+            logoUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/PNG+WIZBIZ+LOGO%40200x-8.png',
+            footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/wizhub-footer.png'
         }).catch((error) => {
             console.error('Error sending email:', error);
         });

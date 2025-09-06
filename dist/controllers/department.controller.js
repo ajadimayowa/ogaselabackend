@@ -58,8 +58,8 @@ const createAdminDepartment = (req, res) => __awaiter(void 0, void 0, void 0, fu
             createdByName: creatorExist.fullName,
             createdByEmail: creatorExist.email,
             orgPrimaryColor: orgExists.primaryColor || '#ffffff',
-            logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
-            footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
+            logoUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/PNG+WIZBIZ+LOGO%40200x-8.png',
+            footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/wizhub-footer.png'
         });
         return res.status(201).json({
             success: true,
@@ -111,8 +111,8 @@ const createDepartment = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 createdByEmail: userExist.email,
                 nameOfOrg: orgExist.name,
                 orgEmail: orgExist.email,
-                logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
-                footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
+                logoUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/PNG+WIZBIZ+LOGO%40200x-8.png',
+                footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/wizhub-footer.png'
             });
         }
         catch (emailErr) {
