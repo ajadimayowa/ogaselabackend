@@ -1,4 +1,4 @@
-// models/Member.ts
+// models/Member.ts 
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IRepaymentHistory {
@@ -8,45 +8,93 @@ export interface IRepaymentHistory {
   reference?: string;
 }
 
-export interface IMember extends Document {
+export interface IKYC {
+  modeOfIdentification: string;
+  identificationNumber?: string;
+  memberIdDocumentFile?: string;
+  passportPhoto: string;
+  isVerified: boolean;
+  biometric?: string;
+}
+
+export interface INOK {
+  title?: string;
   fullName: string;
+  phoneNumber: string;
+  relationshipWithNok: string;
+
+  address: string;
+  state: string;
+
+  attestationDocument: string;
+  idCard: string;
+  passport: string;
+
+  isVerified: boolean;
+}
+
+export interface IG1 {
+  title?: string;
+  fullName: string;
+  phoneNumber: string;
+  relationshipWithNok?: string;
+
+  address: string;
+  state: string;
+
+  attestationDocument: string;
+  idCard: string;
+  passport: string;
+
+  isVerified: boolean;
+}
+
+export interface IRef {
+  title?: string;
+  fullName: string;
+  phoneNumber: string;
+  relationshipWithNok?: string;
+
+  address: string;
+  state: string;
+
+  attestationDocument: string;
+  idCard: string;
+  passport: string;
+
+  isVerified: boolean;
+}
+
+
+
+export interface IMember extends Document {
+  title?: string;
+  fullName: string;
+  alias?: string;
+  gender?: string;
+  language: string;
+  maritalStatus?: string;
+  durationOfStay:number;
   bvn: number;
   phoneNumber: string;
   email: string;
-  description: string;
+  description?: string;
   isDisable: boolean;
-  disabledBy: mongoose.Types.ObjectId;
+  isPhoneVerified?: boolean;
+  isApproved?: boolean;
+  disabledBy?: mongoose.Types.ObjectId;
   organization: mongoose.Types.ObjectId;
   branch: mongoose.Types.ObjectId;
   group: mongoose.Types.ObjectId;
+  noOfKids?: number;
   createdBy: mongoose.Types.ObjectId;
-  updatedBy: mongoose.Types.ObjectId;
-  totalAmountBorrowed: number;
-  loanDisbursementDate: Date;
-  loanRepaymentLength: number;
-  repaymentHistory: IRepaymentHistory[];
-  kyc?: {
-    verificationType: string;
-    verificationIdNumber: number | string;
-    verificationIdDocument: string;
-    isVerified: boolean;
-    biometric: string;
-  };
-  nok?: {
-    fullName: string;
-    phoneNumber: string;
-    address: string;
-    isVerified: boolean;
-    verificationType: string;
-    verificationIdNumber: number | string;
-    verificationIdDocument: string;
-  };
-  nextRepaymentDate: Date;
-  expectedCompletionDate: Date;
-  totalAmountPaidBack: number;
-  amountToSettle: number;
+  updatedBy?: mongoose.Types.ObjectId;
+  kyc?: IKYC;
   createdAt: Date;
   updatedAt: Date;
+
+  state:string;
+  lga:string
 }
 
 const RepaymentHistorySchema: Schema = new Schema(
@@ -59,50 +107,108 @@ const RepaymentHistorySchema: Schema = new Schema(
   { _id: false }
 );
 
+
+
+const KycSchema: Schema = new Schema(
+  {
+    passportPhoto:{ type: String },
+    idCardPhoto: { type: String },
+    attestationDocumentFile: { type: String },
+    utilityBillPhoto: { type: String },
+
+    selectedModeOfIdentification:{ type: String },
+    idIdentificationNumber: { type: String },
+
+    isVerified: { type: Boolean, default: false },
+    biometric: { type: String },
+  },
+  { _id: false }
+);
+
+const NOKSchema: Schema = new Schema(
+  {
+    title: { type: String },
+    fullName: { type: String },
+    phoneNumber: { type: String },
+    relationshipWithNok: { type: String },
+    address: { type: String },
+    state: { type: String },
+    attestationDocument: { type: String },
+    idCard: { type: String },
+    passport: { type: String },
+    isVerified: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+const G1Schema: Schema = new Schema(
+  {
+    title: { type: String },
+    fullName: { type: String },
+    phoneNumber: { type: String },
+    relationshipWithNok: { type: String },
+    address: { type: String },
+    state: { type: String },
+    attestationDocument: { type: String },
+    idCard: { type: String },
+    passport: { type: String },
+    isVerified: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
+const RefSchema: Schema = new Schema(
+  {
+    title: { type: String },
+    fullName: { type: String },
+    phoneNumber: { type: String },
+    address: { type: String },
+    state: { type: String },
+    attestationDocument: { type: String },
+    idCard: { type: String },
+    passport: { type: String },
+    isVerified: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
 const MemberSchema: Schema = new Schema(
   {
+    title: { type: String },
     fullName: { type: String, required: true, trim: true },
+    alias: { type: String, trim: true },
+    gender: { type: String },
+    maritalStatus: { type: String },
+    dob: { type: String },
+    state: { type: String },
+    lga: { type: String },
+    language: { type: String },
+    homeAddress: { type: String },
+    nearestBusStop: { type: String },
+    durationOfStay: { type: Number },
+    officeAddress: { type: String },
+    occupation: { type: String },
     bvn: { type: Number, required: true },
     phoneNumber: { type: String, required: true },
-    email: { type: String, required: true, lowercase: true, trim: true },
-    description: { type: String, default: "" },
+    email: { type: String, lowercase: true, trim: true, default: '' },
+    noOfKids: { type: Number },
+    descripstion: { type: String, default: "" },
+    isApproved: { type: Boolean, default: false },
     isDisable: { type: Boolean, default: false },
-    disabledBy: { type: Schema.Types.ObjectId, ref: "User" },
-
+    disabledBy: { type: Schema.Types.ObjectId, ref: "Staffs" },
     organization: { type: Schema.Types.ObjectId, ref: "Organization", required: true },
     branch: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
     group: { type: Schema.Types.ObjectId, ref: "Group", required: true },
 
-    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
-    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    createdBy: { type: Schema.Types.ObjectId, ref: "Staffs", required: true },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "Staffs" },
 
-    totalAmountBorrowed: { type: Number, default: 0 },
-    loanDisbursementDate: { type: Date },
-    loanRepaymentLength: { type: Number }, // length in months or weeks
-    repaymentHistory: [RepaymentHistorySchema],
 
-    kyc: {
-      verificationType: { type: String },
-      verificationIdNumber: { type: Schema.Types.Mixed }, // allows number or string
-      verificationIdDocument: { type: String },
-      isVerified: { type: Boolean, default: false },
-      biometric: { type: String }, // could be base64 or file reference
-    },
 
-    nok: {
-      fullName: { type: String },
-      phoneNumber: { type: String },
-      address: { type: String },
-      isVerified: { type: Boolean, default: false },
-      verificationType: { type: String },
-      verificationIdNumber: { type: Schema.Types.Mixed },
-      verificationIdDocument: { type: String },
-    },
-
-    nextRepaymentDate: { type: Date },
-    expectedCompletionDate: { type: Date },
-    totalAmountPaidBack: { type: Number, default: 0 },
-    amountToSettle: { type: Number, default: 0 },
+    kyc: KycSchema,
+    nok: NOKSchema,
+    gurantor1: G1Schema,
+    gurantor2: G1Schema,
+    ref: RefSchema,
   },
   { timestamps: true }
 );

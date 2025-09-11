@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteBusinessRule = exports.updateBusinessRule = exports.getBusinessRule = exports.createBusinessRule = void 0;
+exports.deleteBusinessRule = exports.updateBusinessRule = exports.getBusinessRuleProducts = exports.getBusinessRule = exports.createBusinessRule = void 0;
 const BusinessRule_1 = __importDefault(require("../../models/BusinessRule"));
 // ✅ CREATE Business Rule (one per company)
 const createBusinessRule = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -45,13 +45,28 @@ const getBusinessRule = (req, res) => __awaiter(void 0, void 0, void 0, function
         if (!rule) {
             return res.status(404).json({ message: "Business rule not found" });
         }
-        return res.status(200).json({ data: rule });
+        return res.status(200).json({ payload: rule });
     }
     catch (error) {
         return res.status(500).json({ message: "Error fetching business rule", error });
     }
 });
 exports.getBusinessRule = getBusinessRule;
+// ✅ GET Business Rule by company
+const getBusinessRuleProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { companyId } = req.params;
+        const rule = yield BusinessRule_1.default.findOne({ companyId });
+        if (!rule) {
+            return res.status(404).json({ message: "Business rule not set" });
+        }
+        return res.status(200).json({ data: rule.interestRates });
+    }
+    catch (error) {
+        return res.status(500).json({ message: "Error fetching business rule", error });
+    }
+});
+exports.getBusinessRuleProducts = getBusinessRuleProducts;
 // ✅ UPDATE Business Rule (with change history)
 const updateBusinessRule = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

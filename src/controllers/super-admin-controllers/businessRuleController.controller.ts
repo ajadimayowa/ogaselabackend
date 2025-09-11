@@ -28,7 +28,7 @@ const rule = await BusinessRule.create({
 };
 
 // ✅ GET Business Rule by company
-export const getBusinessRule = async (req: Request, res: Response) => {
+export const getBusinessRule = async (req: Request, res: Response):Promise<any> => {
     try {
         const { companyId } = req.params;
 
@@ -37,7 +37,23 @@ export const getBusinessRule = async (req: Request, res: Response) => {
             return res.status(404).json({ message: "Business rule not found" });
         }
 
-        return res.status(200).json({ data: rule });
+        return res.status(200).json({ payload: rule });
+    } catch (error) {
+        return res.status(500).json({ message: "Error fetching business rule", error });
+    }
+};
+
+// ✅ GET Business Rule by company
+export const getBusinessRuleProducts = async (req: Request, res: Response):Promise<any> => {
+    try {
+        const { companyId } = req.params;
+
+        const rule = await BusinessRule.findOne({ companyId });
+        if (!rule) {
+            return res.status(404).json({ message: "Business rule not set" });
+        }
+
+        return res.status(200).json({ data: rule.interestRates });
     } catch (error) {
         return res.status(500).json({ message: "Error fetching business rule", error });
     }

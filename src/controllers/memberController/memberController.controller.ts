@@ -2,6 +2,10 @@
 import { Request, Response } from "express";
 import Member from "../../models/Member";
 import Group from "../../models/Group";
+import { uploadBufferToS3 } from "../../services/s3Upload";
+
+
+// Helper: upload a single file buffer to S3
 
 /** Create Member */
 export const createMember = async (req: Request, res: Response) => {
@@ -51,7 +55,9 @@ export const getMembers = async (req: Request, res: Response) => {
 /** Get Member by ID */
 export const getMemberById = async (req: Request, res: Response):Promise<any>=> {
   try {
-    const member = await Member.findById(req.params.id).populate("group");
+    const member = await Member.findById(req.params.id).
+    populate("group").
+    populate("createdBy",'fullName email phoneNumber staffLevel');
     if (!member) return res.status(404).json({ error: "Member not found" });
     return res.status(201).json({success:true,payload:member,message:'success'});
   } catch (err: any) {
@@ -60,17 +66,291 @@ export const getMemberById = async (req: Request, res: Response):Promise<any>=> 
 };
 
 /** Update Member */
-export const updateMember = async (req: Request, res: Response):Promise<any> => {
+// export const updateMember = async (req: Request, res: Response):Promise<any> => {
+//   try {
+//     const member = await Member.findByIdAndUpdate(req.params.memberId, req.body, { new: true });
+//     if (!member) return res.status(404).json({ error: "Member not found" });
+
+//     const group = await Group.findById(member.group);
+//     // if (group) await group.calculateTotals();
+
+//    return  res.json({ message: "Member updated", member });
+//   } catch (err: any) {
+//    return  res.status(400).json({ error: err.message });
+//   }
+// };
+
+/** Update Member */
+export const updateMember = async (req: Request, res: Response): Promise<any> => {
   try {
-    const member = await Member.findByIdAndUpdate(req.params.memberId, req.body, { new: true });
+    const { memberId } = req.params;
+
+    // Multer provides files in this shape: { [fieldname]: Express.Multer.File[] }
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    // Safe uploader
+    const uploadFile = async (field: string) => {
+      const file = files?.[field]?.[0];
+      return file ? (await uploadBufferToS3(file)).url : null;
+    };
+
+    // Upload new files (if provided)
+    const passportPhoto = await uploadFile("passportPhoto");
+    const utilityBillPhoto = await uploadFile("utilityBillPhoto");
+    const idCardPhoto = await uploadFile("idCardPhoto");
+    const attestationDocumentFile = await uploadFile("attestationDocumentFile");
+
+    // Body fields
+    const {
+      title,
+      fullName,
+      alias,
+      maritalStatus,
+      dob,
+      homeAddress,
+      noOfKids,
+      stateOfOrigin,
+      lgaOfOrigin,
+      occupation,
+      residentialAddress,
+      nearestBusStop,
+      durationOfStay,
+      language,
+      officeAddress,
+      selectedModeOfIdentification,
+      idIdentificationNumber,
+      noOfChildren,
+    } = req.body;
+
+    // Gender logic
+    let gender: string | undefined;
+    if (title?.toLowerCase() === "mr") gender = "male";
+    if (["mrs", "miss"].includes(title?.toLowerCase())) gender = "female";
+
+    // Build KYC update only with files that were uploaded
+    const kycUpdate: any = {
+      selectedModeOfIdentification,
+      idIdentificationNumber,
+    };
+    if (passportPhoto) kycUpdate.passportPhoto = passportPhoto;
+    if (utilityBillPhoto) kycUpdate.utilityBillPhoto = utilityBillPhoto;
+    if (idCardPhoto) kycUpdate.idCardPhoto = idCardPhoto;
+    if (attestationDocumentFile) kycUpdate.attestationDocumentFile = attestationDocumentFile;
+
+    // Update member document
+    const member = await Member.findByIdAndUpdate(
+      memberId,
+      {
+        title,
+        fullName,
+        gender,
+        alias,
+        maritalStatus,
+        homeAddress,
+        noOfKids,
+        dob,
+        state:stateOfOrigin,
+        lga:lgaOfOrigin,
+        occupation,
+        residentialAddress,
+        nearestBusStop,
+        durationOfStay,
+        language,
+        officeAddress,
+        noOfChildren,
+        ...(Object.keys(kycUpdate).length > 0 && { kyc: kycUpdate }), // only set if something changed
+      },
+      { new: true }
+    );
+
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        error: "Member not found",
+        payload: {},
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Loan application submitted successfully",
+      payload: member,
+    });
+  } catch (err: any) {
+    console.error("updateMember error:", err);
+    return res.status(400).json({
+      success: false,
+      error: err.message,
+      payload: {},
+    });
+  }
+};
+
+export const startLoanApplication = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const memberId = req.params.memberId;
+
+    // Files (multer.memoryStorage) come in as { [fieldname]: Express.Multer.File[] }
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    // Helper to upload safely
+    const uploadFile = async (field: string) => {
+      const file = files?.[field]?.[0];
+      return file ? (await uploadBufferToS3(file)).url : null;
+    };
+
+    // Upload each file to S3
+    const passportPhoto = await uploadFile("passportPhoto");
+    const memberIdDocumentFile = await uploadFile("memberIdDocumentFile");
+
+    const g1Passport = await uploadFile("g1Passport");
+    const g1AttestationDocument = await uploadFile("g1AttestationDocument");
+
+    const g2Passport = await uploadFile("g2Passport");
+    const g2AttestationDocument = await uploadFile("g2AttestationDocument");
+
+    const nokPassport = await uploadFile("nokPassport");
+    const nokAttestationDocument = await uploadFile("nokAttestationDocument");
+
+    const refPassport = await uploadFile("refPassport");
+    const refAttestationDocument = await uploadFile("refAttestationDocument");
+
+    // Form fields
+    const {
+      title,
+      dailyLatePercentage,
+      dob,
+      g1FullName,
+      g1ID,
+      g1PhoneNumber,
+      g1Title,
+      g2FullName,
+      g2ID,
+      g2PhoneNumber,
+      g2Title,
+      interestRate,
+      lgaOfOrigin,
+      loanPurpose,
+      loanTenure,
+      maritalStatus,
+      modeOfIdentification,
+      nearestBusStop,
+      noOfChildren,
+      nokFullName,
+      nokID,
+      nokPhoneNumber,
+      nokTitle,
+      occupation,
+      officeAddress,
+      penaltyFee,
+      refFullName,
+      refID,
+      refPhoneNumber,
+      refTitle,
+      relationshipWithNok,
+      requestedLoanAmount,
+      residentLengthOfStay,
+      residentialAddress,
+      stateOfNok,
+      stateOfOrigin,
+      stateOfg1,
+      stateOfg2,
+      stateOfref,
+    } = req.body;
+
+    // Update member
+    const member = await Member.findByIdAndUpdate(
+      memberId,
+      {
+        title,
+        dob,
+        occupation,
+        officeAddress,
+        residentialAddress,
+        nearestBusStop,
+        noOfChildren,
+        maritalStatus,
+        lgaOfOrigin,
+        stateOfOrigin,
+residentLengthOfStay,
+        passportPhoto,
+        memberIdDocumentFile,
+
+        loanRecord: {
+          loanVerificationId: "BCK-" + memberId.slice(5, 12).toUpperCase(),
+          loanStartDate: new Date(),
+          interestRate,
+          requestedLoanAmount,
+          calculatedAmountToBePaid: requestedLoanAmount * (1 + (+interestRate / 100)),
+          loanPurpose,
+          loanTenure: loanTenure * 7,
+          repaymentDuration: loanTenure,
+          dailyLatePercentage,
+          penaltyFee,
+          status: "Pending",
+          applicationDate: new Date(),
+        },
+
+        guarantor1: {
+          fullName: g1FullName,
+          id: g1ID,
+          phoneNumber: g1PhoneNumber,
+          title: g1Title,
+          passport: g1Passport,
+          attestationDocument: g1AttestationDocument,
+          state: stateOfg1,
+        },
+
+        guarantor2: {
+          fullName: g2FullName,
+          id: g2ID,
+          phoneNumber: g2PhoneNumber,
+          title: g2Title,
+          passport: g2Passport,
+          attestationDocument: g2AttestationDocument,
+          state: stateOfg2,
+        },
+
+        nok: {
+          fullName: nokFullName,
+          id: nokID,
+          phoneNumber: nokPhoneNumber,
+          title: nokTitle,
+          passport: nokPassport,
+          attestationDocument: nokAttestationDocument,
+          state: stateOfNok,
+          relationship: relationshipWithNok,
+        },
+
+        referee: {
+          fullName: refFullName,
+          id: refID,
+          phoneNumber: refPhoneNumber,
+          title: refTitle,
+          passport: refPassport,
+          attestationDocument: refAttestationDocument,
+          state: stateOfref,
+        },
+      },
+      { new: true }
+    );
+
     if (!member) return res.status(404).json({ error: "Member not found" });
 
-    const group = await Group.findById(member.group);
-    // if (group) await group.calculateTotals();
+    // Update group totals
+    // const group = await Group.findById(member.group);
+    // if (group) {
+    //   group.totalAmountBorrowed = await Member.aggregate([
+    //     { $match: { group: group._id } },
+    //     { $group: { _id: null, total: { $sum: "$loanRecord.requestedLoanAmount" } } },
+    //   ]).then((r) => (r[0] ? r[0].total : 0));
 
-   return  res.json({ message: "Member updated", member });
+    //   await group.save();
+    // }
+
+    return res.json({ message: "Loan application submitted successfully", member });
   } catch (err: any) {
-   return  res.status(400).json({ error: err.message });
+    return res.status(400).json({ error: err.message });
   }
 };
 

@@ -32,40 +32,36 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-// models/Group.ts
 const mongoose_1 = __importStar(require("mongoose"));
 const GroupSchema = new mongoose_1.Schema({
+    approvedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs" },
+    isApproved: { type: Boolean, default: false },
     groupName: { type: String, required: true, trim: true },
     description: { type: String },
     isDisable: { type: Boolean, default: false },
-    disabledBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
+    disabledBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs" },
     organization: { type: mongoose_1.Schema.Types.ObjectId, ref: "Organization", required: true },
     branch: { type: mongoose_1.Schema.Types.ObjectId, ref: "Branch", required: true },
     groupMembers: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Member" }],
-    createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
-    updatedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
-    totalAmountBorrowed: { type: Number, default: 0 },
-    totalAmountRefunded: { type: Number, default: 0 },
+    createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs" },
+    updatedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs" },
+    kyc: {
+        isVerified: { type: Boolean, default: false },
+        refferenceDocument: { type: String },
+        attestationDocument: { type: String },
+        gurantorDocument: { type: String },
+    },
 }, { timestamps: true });
-// Automatically calculate totals
-GroupSchema.methods.calculateTotals = function () {
-    return __awaiter(this, void 0, void 0, function* () {
-        const members = yield mongoose_1.default.model("Member").find({ group: this._id });
-        this.totalLoanAmount = members.reduce((sum, m) => sum + m.loanAmount, 0);
-        this.totalAmountRepaid = members.reduce((sum, m) => sum + m.amountRepaid, 0);
-        yield this.save();
-    });
-};
+// Transform output
+GroupSchema.set("toJSON", {
+    transform: function (doc, ret) {
+        ret.id = ret._id.toString(); // expose as id
+        delete ret._id; // remove _id
+        delete ret.__v; // remove version key
+        return ret;
+    },
+});
 // ✅ Prevent duplicate group names inside the same org+branch
 GroupSchema.index({ organization: 1, branch: 1, groupName: 1 }, { unique: true });
 exports.default = mongoose_1.default.model("Group", GroupSchema);

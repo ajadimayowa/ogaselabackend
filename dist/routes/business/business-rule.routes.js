@@ -8,5 +8,7 @@ const businessRuleController_controller_1 = require("../../controllers/super-adm
 const auth_middleware_1 = require("../../middleware/auth.middleware");
 const router = (0, express_1.default)();
 router.post('/rule/create', auth_middleware_1.verifyToken, businessRuleController_controller_1.createBusinessRule);
+router.get('/rule/:companyId', auth_middleware_1.verifyToken, businessRuleController_controller_1.getBusinessRule);
+router.get('/rule/products/:companyId', auth_middleware_1.verifyToken, businessRuleController_controller_1.getBusinessRuleProducts);
 router.post('/rule/update/:companyId', auth_middleware_1.verifyToken, businessRuleController_controller_1.updateBusinessRule);
 exports.default = router;
