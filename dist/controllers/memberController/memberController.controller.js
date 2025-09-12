@@ -91,32 +91,70 @@ exports.getMemberById = getMemberById;
 const updateMember = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { memberId } = req.params;
-        // Multer provides files in this shape: { [fieldname]: Express.Multer.File[] }
         const files = req.files;
-        // Safe uploader
+        // Safe uploader - only if actual file exists
         const uploadFile = (field) => __awaiter(void 0, void 0, void 0, function* () {
-            var _a;
-            const file = (_a = files === null || files === void 0 ? void 0 : files[field]) === null || _a === void 0 ? void 0 : _a[0];
-            return file ? (yield (0, s3Upload_1.uploadBufferToS3)(file)).url : null;
+            if ((files === null || files === void 0 ? void 0 : files[field]) && files[field].length > 0) {
+                const file = files[field][0];
+                const result = yield (0, s3Upload_1.uploadBufferToS3)(file);
+                return result.url;
+            }
+            return undefined; // <-- very important
         });
-        // Upload new files (if provided)
+        // Upload only if provided
         const passportPhoto = yield uploadFile("passportPhoto");
         const utilityBillPhoto = yield uploadFile("utilityBillPhoto");
         const idCardPhoto = yield uploadFile("idCardPhoto");
         const attestationDocumentFile = yield uploadFile("attestationDocumentFile");
         // Body fields
         const { title, fullName, alias, maritalStatus, dob, homeAddress, noOfKids, stateOfOrigin, lgaOfOrigin, occupation, residentialAddress, nearestBusStop, durationOfStay, language, officeAddress, selectedModeOfIdentification, idIdentificationNumber, noOfChildren, } = req.body;
-        // Gender logic
-        let gender;
-        if ((title === null || title === void 0 ? void 0 : title.toLowerCase()) === "mr")
-            gender = "male";
-        if (["mrs", "miss"].includes(title === null || title === void 0 ? void 0 : title.toLowerCase()))
-            gender = "female";
-        // Build KYC update only with files that were uploaded
-        const kycUpdate = {
-            selectedModeOfIdentification,
-            idIdentificationNumber,
-        };
+        // Build updateData dynamically
+        const updateData = {};
+        if (title) {
+            updateData.title = title;
+            updateData.gender =
+                title.toLowerCase() === "mr"
+                    ? "male"
+                    : ["mrs", "miss"].includes(title.toLowerCase())
+                        ? "female"
+                        : undefined;
+        }
+        if (fullName)
+            updateData.fullName = fullName;
+        if (alias)
+            updateData.alias = alias;
+        if (maritalStatus)
+            updateData.maritalStatus = maritalStatus;
+        if (dob)
+            updateData.dob = dob;
+        if (homeAddress)
+            updateData.homeAddress = homeAddress;
+        if (noOfKids)
+            updateData.noOfKids = noOfKids;
+        if (stateOfOrigin)
+            updateData.state = stateOfOrigin;
+        if (lgaOfOrigin)
+            updateData.lga = lgaOfOrigin;
+        if (occupation)
+            updateData.occupation = occupation;
+        if (residentialAddress)
+            updateData.residentialAddress = residentialAddress;
+        if (nearestBusStop)
+            updateData.nearestBusStop = nearestBusStop;
+        if (durationOfStay)
+            updateData.durationOfStay = durationOfStay;
+        if (language)
+            updateData.language = language;
+        if (officeAddress)
+            updateData.officeAddress = officeAddress;
+        if (noOfChildren)
+            updateData.noOfChildren = noOfChildren;
+        // KYC updates (only add if present)
+        const kycUpdate = {};
+        if (selectedModeOfIdentification)
+            kycUpdate.selectedModeOfIdentification = selectedModeOfIdentification;
+        if (idIdentificationNumber)
+            kycUpdate.idIdentificationNumber = idIdentificationNumber;
         if (passportPhoto)
             kycUpdate.passportPhoto = passportPhoto;
         if (utilityBillPhoto)
@@ -125,41 +163,22 @@ const updateMember = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             kycUpdate.idCardPhoto = idCardPhoto;
         if (attestationDocumentFile)
             kycUpdate.attestationDocumentFile = attestationDocumentFile;
-        // Update member document
-        const member = yield Member_1.default.findByIdAndUpdate(memberId, Object.assign({ title,
-            fullName,
-            gender,
-            alias,
-            maritalStatus,
-            homeAddress,
-            noOfKids,
-            dob, state: stateOfOrigin, lga: lgaOfOrigin, occupation,
-            residentialAddress,
-            nearestBusStop,
-            durationOfStay,
-            language,
-            officeAddress,
-            noOfChildren }, (Object.keys(kycUpdate).length > 0 && { kyc: kycUpdate })), { new: true });
+        if (Object.keys(kycUpdate).length > 0) {
+            updateData.kyc = kycUpdate;
+        }
+        const member = yield Member_1.default.findByIdAndUpdate(memberId, updateData, { new: true });
         if (!member) {
-            return res.status(404).json({
-                success: false,
-                error: "Member not found",
-                payload: {},
-            });
+            return res.status(404).json({ success: false, error: "Member not found" });
         }
         return res.json({
             success: true,
-            message: "Loan application submitted successfully",
+            message: "Member updated successfully",
             payload: member,
         });
     }
     catch (err) {
         console.error("updateMember error:", err);
-        return res.status(400).json({
-            success: false,
-            error: err.message,
-            payload: {},
-        });
+        return res.status(400).json({ success: false, error: err.message });
     }
 });
 exports.updateMember = updateMember;

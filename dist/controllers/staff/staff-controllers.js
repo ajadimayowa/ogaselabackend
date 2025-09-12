@@ -82,8 +82,8 @@ const registerSuperAdmin = (req, res) => __awaiter(void 0, void 0, void 0, funct
                 staffRole: roleExists === null || roleExists === void 0 ? void 0 : roleExists.name,
                 staffDept: deptExists.name,
                 staffClass: staff.userClass,
-                logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
-                footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
+                logoUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/PNG+WIZBIZ+LOGO%40200x-8.png',
+                footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/wizhub-footer.png'
             });
         }
         catch (emailErr) {
@@ -156,8 +156,8 @@ const createStaff = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 staffRole: roleExists === null || roleExists === void 0 ? void 0 : roleExists.name,
                 staffDept: deptExists.name,
                 staffClass: staff.userClass,
-                logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
-                footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
+                logoUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/PNG+WIZBIZ+LOGO%40200x-8.png',
+                footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/wizhub-footer.png'
             });
         }
         catch (emailErr) {

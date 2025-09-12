@@ -74,7 +74,7 @@ export interface IMember extends Document {
   gender?: string;
   language: string;
   maritalStatus?: string;
-  durationOfStay:number;
+  durationOfStay:string;
   bvn: number;
   phoneNumber: string;
   email: string;
@@ -184,7 +184,7 @@ const MemberSchema: Schema = new Schema(
     language: { type: String },
     homeAddress: { type: String },
     nearestBusStop: { type: String },
-    durationOfStay: { type: Number },
+    durationOfStay: { type: String },
     officeAddress: { type: String },
     occupation: { type: String },
     bvn: { type: Number, required: true },

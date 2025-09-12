@@ -105,8 +105,8 @@ export const registerSuperAdmin = async (req: Request, res: Response): Promise<a
                 staffRole: roleExists?.name,
                 staffDept: deptExists.name,
                 staffClass: staff.userClass,
-                logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
-                footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
+                logoUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/PNG+WIZBIZ+LOGO%40200x-8.png',
+                footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/wizhub-footer.png'
             });
         } catch (emailErr) {
             console.error('Error sending welcome email:', emailErr);
@@ -209,8 +209,8 @@ export const createStaff = async (req: Request, res: Response): Promise<any> => 
                 staffRole: roleExists?.name,
                 staffDept: deptExists.name,
                 staffClass: staff.userClass,
-                logoUrl: 'https://wok9jamedia.s3.eu-north-1.amazonaws.com/fsh-logo+(1).png',
-                footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/fsh-email-temp-footer.png'
+                logoUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/PNG+WIZBIZ+LOGO%40200x-8.png',
+                footerUrl: 'https://bckash.s3.eu-north-1.amazonaws.com/images/wizhub-footer.png'
             });
         } catch (emailErr) {
             console.error('Error sending welcome email:', emailErr);
@@ -409,5 +409,3 @@ export const getStaffProfileByStaffId = async (req: Request, res: Response):Prom
     });
   }
 };
-
-

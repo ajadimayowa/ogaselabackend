@@ -98,7 +98,7 @@ const MemberSchema = new mongoose_1.Schema({
     language: { type: String },
     homeAddress: { type: String },
     nearestBusStop: { type: String },
-    durationOfStay: { type: Number },
+    durationOfStay: { type: String },
     officeAddress: { type: String },
     occupation: { type: String },
     bvn: { type: Number, required: true },

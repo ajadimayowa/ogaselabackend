@@ -84,17 +84,19 @@ export const getMemberById = async (req: Request, res: Response):Promise<any>=> 
 export const updateMember = async (req: Request, res: Response): Promise<any> => {
   try {
     const { memberId } = req.params;
-
-    // Multer provides files in this shape: { [fieldname]: Express.Multer.File[] }
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-    // Safe uploader
+    // Safe uploader - only if actual file exists
     const uploadFile = async (field: string) => {
-      const file = files?.[field]?.[0];
-      return file ? (await uploadBufferToS3(file)).url : null;
+      if (files?.[field] && files[field].length > 0) {
+        const file = files[field][0];
+        const result = await uploadBufferToS3(file);
+        return result.url;
+      }
+      return undefined; // <-- very important
     };
 
-    // Upload new files (if provided)
+    // Upload only if provided
     const passportPhoto = await uploadFile("passportPhoto");
     const utilityBillPhoto = await uploadFile("utilityBillPhoto");
     const idCardPhoto = await uploadFile("idCardPhoto");
@@ -122,67 +124,60 @@ export const updateMember = async (req: Request, res: Response): Promise<any> =>
       noOfChildren,
     } = req.body;
 
-    // Gender logic
-    let gender: string | undefined;
-    if (title?.toLowerCase() === "mr") gender = "male";
-    if (["mrs", "miss"].includes(title?.toLowerCase())) gender = "female";
+    // Build updateData dynamically
+    const updateData: any = {};
+    if (title) {
+      updateData.title = title;
+      updateData.gender =
+        title.toLowerCase() === "mr"
+          ? "male"
+          : ["mrs", "miss"].includes(title.toLowerCase())
+          ? "female"
+          : undefined;
+    }
+    if (fullName) updateData.fullName = fullName;
+    if (alias) updateData.alias = alias;
+    if (maritalStatus) updateData.maritalStatus = maritalStatus;
+    if (dob) updateData.dob = dob;
+    if (homeAddress) updateData.homeAddress = homeAddress;
+    if (noOfKids) updateData.noOfKids = noOfKids;
+    if (stateOfOrigin) updateData.state = stateOfOrigin;
+    if (lgaOfOrigin) updateData.lga = lgaOfOrigin;
+    if (occupation) updateData.occupation = occupation;
+    if (residentialAddress) updateData.residentialAddress = residentialAddress;
+    if (nearestBusStop) updateData.nearestBusStop = nearestBusStop;
+    if (durationOfStay) updateData.durationOfStay = durationOfStay;
+    if (language) updateData.language = language;
+    if (officeAddress) updateData.officeAddress = officeAddress;
+    if (noOfChildren) updateData.noOfChildren = noOfChildren;
 
-    // Build KYC update only with files that were uploaded
-    const kycUpdate: any = {
-      selectedModeOfIdentification,
-      idIdentificationNumber,
-    };
+    // KYC updates (only add if present)
+    const kycUpdate: any = {};
+    if (selectedModeOfIdentification) kycUpdate.selectedModeOfIdentification = selectedModeOfIdentification;
+    if (idIdentificationNumber) kycUpdate.idIdentificationNumber = idIdentificationNumber;
     if (passportPhoto) kycUpdate.passportPhoto = passportPhoto;
     if (utilityBillPhoto) kycUpdate.utilityBillPhoto = utilityBillPhoto;
     if (idCardPhoto) kycUpdate.idCardPhoto = idCardPhoto;
     if (attestationDocumentFile) kycUpdate.attestationDocumentFile = attestationDocumentFile;
 
-    // Update member document
-    const member = await Member.findByIdAndUpdate(
-      memberId,
-      {
-        title,
-        fullName,
-        gender,
-        alias,
-        maritalStatus,
-        homeAddress,
-        noOfKids,
-        dob,
-        state:stateOfOrigin,
-        lga:lgaOfOrigin,
-        occupation,
-        residentialAddress,
-        nearestBusStop,
-        durationOfStay,
-        language,
-        officeAddress,
-        noOfChildren,
-        ...(Object.keys(kycUpdate).length > 0 && { kyc: kycUpdate }), // only set if something changed
-      },
-      { new: true }
-    );
+    if (Object.keys(kycUpdate).length > 0) {
+      updateData.kyc = kycUpdate;
+    }
+
+    const member = await Member.findByIdAndUpdate(memberId, updateData, { new: true });
 
     if (!member) {
-      return res.status(404).json({
-        success: false,
-        error: "Member not found",
-        payload: {},
-      });
+      return res.status(404).json({ success: false, error: "Member not found" });
     }
 
     return res.json({
       success: true,
-      message: "Loan application submitted successfully",
+      message: "Member updated successfully",
       payload: member,
     });
   } catch (err: any) {
     console.error("updateMember error:", err);
-    return res.status(400).json({
-      success: false,
-      error: err.message,
-      payload: {},
-    });
+    return res.status(400).json({ success: false, error: err.message });
   }
 };
 
