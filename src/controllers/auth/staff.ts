@@ -47,11 +47,11 @@ export const loginStaff = async (req: Request, res: Response): Promise<any> => {
     staff.loginOtpExpires = otpExpires;
     await staff.save();
 
-    await sendLoginOtp({
-      to:staff.phoneNumber,
-      code:+otp,
-      firstName:staff.firstName
-    })
+    // await sendLoginOtp({
+    //   to:staff.phoneNumber,
+    //   code:+otp,
+    //   firstName:staff.firstName
+    // })
     try {
       await sendLoginOtpEmail(staff.firstName, staff.email, otp);
     } catch (error) {

@@ -33,46 +33,26 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Branch = void 0;
+exports.BranchFundTransaction = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const branchSchema = new mongoose_1.Schema({
-    name: { type: String, required: true, trim: true },
-    manager: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs", required: true },
-    managerHistory: [
-        {
-            manager: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs" },
-            from: { type: Date, default: Date.now },
-            to: { type: Date },
-        },
-    ],
-    address: { type: String, required: true },
-    state: { type: String, required: true },
-    lga: { type: String, required: true },
+const branchFundTransactionSchema = new mongoose_1.Schema({
+    branch: { type: mongoose_1.Schema.Types.ObjectId, ref: "Branch", required: true },
     organization: { type: mongoose_1.Schema.Types.ObjectId, ref: "Organization", required: true },
-    createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs", required: true },
-    isApproved: { type: Boolean, default: false },
-    approvedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs" },
-    isDisabled: { type: Boolean, default: false },
-    disabledBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs" },
-    isDeleted: { type: Boolean, default: false },
-    staffs: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs" }],
-    bankDetails: {
-        type: {
-            bankName: { type: String, required: true },
-            accountNumber: { type: String, required: true },
-            accountName: { type: String, required: true },
-            createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs" },
-            updatedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs" },
-            createdAt: { type: Date, default: Date.now },
-            updatedAt: { type: Date, default: Date.now },
-            isActive: { type: Boolean, default: false },
-        },
-        default: null,
+    amount: { type: Number, required: true },
+    type: { type: String, enum: ["CREDIT", "DEBIT"], required: true },
+    purpose: { type: String, required: true },
+    reference: { type: String, required: true },
+    accountSnapshot: {
+        bankName: { type: String, required: true },
+        accountNumber: { type: String, required: true },
+        accountName: { type: String, required: true },
     },
-    currentBalance: { type: Number, default: 0 },
+    createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs", required: true },
+    approvedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs" },
+    createdAt: { type: Date, default: Date.now },
 }, { timestamps: true });
 // Transform output
-branchSchema.set("toJSON", {
+branchFundTransactionSchema.set("toJSON", {
     transform: function (doc, ret) {
         ret.id = ret._id.toString(); // expose as id
         delete ret._id; // remove _id
@@ -80,7 +60,4 @@ branchSchema.set("toJSON", {
         return ret;
     },
 });
-// Unique Constraints
-branchSchema.index({ name: 1, organization: 1 }, { unique: true });
-branchSchema.index({ manager: 1 }, { unique: true, sparse: true });
-exports.Branch = mongoose_1.default.model("Branch", branchSchema);
+exports.BranchFundTransaction = mongoose_1.default.model("BranchFundTransaction", branchFundTransactionSchema);

@@ -22,7 +22,6 @@ const emailTypesHandler_1 = require("../../services/email/emailTypesHandler");
 const Organization_1 = require("../../models/Organization");
 const Department_model_1 = require("../../models/Department.model");
 const Role_1 = __importDefault(require("../../models/Role"));
-const smsSender_1 = require("../../services/sms/smsSender");
 const loginStaff = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     try {
@@ -42,11 +41,11 @@ const loginStaff = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         staff.loginOtp = otp;
         staff.loginOtpExpires = otpExpires;
         yield staff.save();
-        yield (0, smsSender_1.sendLoginOtp)({
-            to: staff.phoneNumber,
-            code: +otp,
-            firstName: staff.firstName
-        });
+        // await sendLoginOtp({
+        //   to:staff.phoneNumber,
+        //   code:+otp,
+        //   firstName:staff.firstName
+        // })
         try {
             yield (0, emailTypesHandler_1.sendLoginOtpEmail)(staff.firstName, staff.email, otp);
         }

@@ -12,10 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transferStaff = exports.addStaffToBranch = exports.deleteBranch = exports.updateBranch = exports.getBranchById = exports.getBranches = exports.createBranch = void 0;
+exports.transferStaff = exports.addStaffToBranch = exports.deleteBranch = exports.updateBranchBankDetails = exports.updateBranch = exports.getBranchById = exports.getBranches = exports.createBranch = void 0;
 const Branch_model_1 = require("../../models/Branch.model");
 const mongoose_1 = __importDefault(require("mongoose"));
 const Staff_1 = __importDefault(require("../../models/Staff"));
+const BranchFundTransaction_model_1 = require("../../models/BranchFundTransaction.model");
 // Create Branch
 const createBranch = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -93,27 +94,43 @@ const getBranchById = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         if (!branch || branch.isDeleted) {
             return res.status(404).json({ message: "Branch not found" });
         }
-        return res.status(200).json(branch);
+        // Fetch funding history (latest first)
+        const fundHistory = yield BranchFundTransaction_model_1.BranchFundTransaction.find({ branch: req.params.id })
+            .sort({ createdAt: -1 });
+        const totalFunding = fundHistory.reduce((sum, tx) => sum + tx.amount, 0);
+        return res.status(200).json({
+            success: true,
+            payload: { branch, fundHistory, totalFunding },
+        });
     }
     catch (error) {
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json({ success: false, message: error.message });
     }
 });
 exports.getBranchById = getBranchById;
 // Update Branch
 const updateBranch = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { name, manager, address, state, lga, approvedBy } = req.body;
+        const { name, manager, address, state, lga, updatedBy, bankDetails } = req.body;
         const branch = yield Branch_model_1.Branch.findById(req.params.id);
         if (!branch || branch.isDeleted) {
             return res.status(404).json({ message: "Branch not found" });
         }
+        // Prevent currentBalance updates directly
+        if ("currentBalance" in req.body) {
+            return res.status(400).json({ message: "You cannot update current balance directly" });
+        }
         // Check unique name in the same organization
         if (name && name !== branch.name) {
-            const existing = yield Branch_model_1.Branch.findOne({ name, organization: branch.organization, isDeleted: false });
+            const existing = yield Branch_model_1.Branch.findOne({
+                name,
+                organization: branch.organization,
+                isDeleted: false,
+            });
             if (existing) {
                 return res.status(400).json({ message: "Branch name already exists in this organization" });
             }
+            branch.name = name;
         }
         // Check manager
         if (manager && manager.toString() !== branch.manager.toString()) {
@@ -121,7 +138,7 @@ const updateBranch = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             if (managerExists) {
                 return res.status(400).json({ message: "This manager is already managing another branch" });
             }
-            // Add to manager history
+            // Add old manager to history
             branch.managerHistory.push({
                 manager: branch.manager,
                 from: new Date(),
@@ -129,11 +146,11 @@ const updateBranch = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             });
             branch.manager = manager;
         }
-        branch.name = name || branch.name;
+        // Update other basic fields
         branch.address = address || branch.address;
         branch.state = state || branch.state;
         branch.lga = lga || branch.lga;
-        branch.approvedBy = approvedBy || branch.approvedBy;
+        branch.approvedBy = updatedBy || branch.approvedBy;
         yield branch.save();
         return res.status(200).json(branch);
     }
@@ -142,6 +159,52 @@ const updateBranch = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.updateBranch = updateBranch;
+const updateBranchBankDetails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const { bankName, accountNumber, accountName, isActive, updatedBy } = req.body;
+        const branch = yield Branch_model_1.Branch.findById(id);
+        if (!branch) {
+            return res.status(404).json({ message: "Branch not found" });
+        }
+        if (branch.bankDetails) {
+            // 🔄 Update only provided fields
+            if (bankName)
+                branch.bankDetails.bankName = bankName;
+            if (accountNumber)
+                branch.bankDetails.accountNumber = accountNumber;
+            if (accountName)
+                branch.bankDetails.accountName = accountName;
+            if (typeof isActive === "boolean")
+                branch.bankDetails.isActive = isActive;
+            branch.bankDetails.updatedBy = new mongoose_1.default.Types.ObjectId(updatedBy);
+            branch.bankDetails.updatedAt = new Date();
+        }
+        else {
+            // 🆕 Create if it doesn't exist yet
+            branch.bankDetails = {
+                bankName: bankName || "",
+                accountNumber: accountNumber || "",
+                accountName: accountName || "",
+                createdBy: updatedBy,
+                updatedBy: updatedBy,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                isActive: true,
+            };
+        }
+        yield branch.save();
+        return res.status(200).json({
+            message: "Bank details updated successfully",
+            bankDetails: branch.bankDetails,
+        });
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+exports.updateBranchBankDetails = updateBranchBankDetails;
 // Soft Delete Branch
 const deleteBranch = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

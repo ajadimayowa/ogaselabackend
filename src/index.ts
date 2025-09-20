@@ -16,7 +16,8 @@ import creatorRoutes from './routes/creator/creator.routes';
 import permissionRoutes from './routes/permissions/permission.route';
 import groupRoutes from './routes/group-routes/groupRoutes.routes';
 import memberRoutes from './routes/customer-routes/customer.routes';
-import businessRuleRoutes from './routes/business/business-rule.routes'
+import businessRuleRoutes from './routes/business/business-rule.routes';
+import loanRoutes from './routes/loanRoutes/loan.routes'
 
 dotenv.config();
 
@@ -53,6 +54,7 @@ app.use(apiPrefix, permissionRoutes);
 app.use(apiPrefix, groupRoutes);
 app.use(apiPrefix, memberRoutes);
 app.use(apiPrefix, businessRuleRoutes);
+app.use(apiPrefix, loanRoutes);
 
 
 
