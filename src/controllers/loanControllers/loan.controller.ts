@@ -9,7 +9,7 @@ export const createLoan = async (req: Request, res: Response): Promise<any> => {
   session.startTransaction();
 
   try {
-    const { organization,branch, principal, interestRate, tenureMonths, lateFeeRate,calculationMethod, member,marketerId } = req.body;
+    const { organization, branch, principal, interestRate, tenureMonths, lateFeeRate, calculationMethod, member,group, marketerId } = req.body;
 
     // 1. Fetch branch and check balance
     const branchDoc = await Branch.findById(branch).session(session);
@@ -35,6 +35,7 @@ export const createLoan = async (req: Request, res: Response): Promise<any> => {
         {
           organization: organization,
           branch,
+          group,
           member,
           createdBy: marketerId,
 
@@ -100,17 +101,19 @@ export const getLoans = async (req: Request, res: Response): Promise<any> => {
     // Query with filters, pagination, and sorting
     const [loans, total] = await Promise.all([
       LoanModel.find(filters)
-        .populate("member", "profile.fullName contact.email group")
-        .populate("branch", "name")
-        .populate("createdBy", "fullName email")
+        .populate("member")
+        .populate("group")
+        .populate("branch")
+        .populate("createdBy")
         .skip(skip)
         .limit(limitNum)
         .sort({ createdAt: -1 }),
       LoanModel.countDocuments(filters),
     ]);
 
-    return res.json({
-      loans,
+    return res.status(200).json({
+      success: true,
+      payload: loans,
       pagination: {
         total,
         page: pageNum,
@@ -126,11 +129,12 @@ export const getLoans = async (req: Request, res: Response): Promise<any> => {
 export const getLoanById = async (req: Request, res: Response): Promise<any> => {
   try {
     const loan = await LoanModel.findById(req.params.id)
-      .populate("member", "profile.fullName contact.email")
+      .populate("member")
+      .populate("group")
       .populate("branch", "name")
       .populate("createdBy", "fullName email");
     if (!loan) return res.status(404).json({ message: "Loan not found" });
-    return res.json({ loan });
+    return res.json({success:true,payload: loan });
   } catch (error: any) {
     return res.status(500).json({ message: error.message });
   }
@@ -183,7 +187,7 @@ export const deleteLoan = async (req: Request, res: Response): Promise<any> => {
 export const addRepayment = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { amount, method, reference,marketerId } = req.body;
+    const { amount, method, reference, marketerId } = req.body;
 
     const loan = await LoanModel.findById(id);
     if (!loan) return res.status(404).json({ message: "Loan not found" });

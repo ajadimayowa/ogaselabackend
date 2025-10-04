@@ -12,6 +12,7 @@ export interface ILoan extends Document {
   organization: mongoose.Types.ObjectId;
   branch: mongoose.Types.ObjectId;
   member: mongoose.Types.ObjectId;
+  group: mongoose.Types.ObjectId;
   createdBy: mongoose.Types.ObjectId; // marketer who raised loan
 
   principal: number;
@@ -72,6 +73,7 @@ const LoanSchema = new Schema<ILoan>(
   {
     organization: { type: Schema.Types.ObjectId, ref: "Organization", required: true },
     branch: { type: Schema.Types.ObjectId, ref: "Branch", required: true },
+    group: { type: Schema.Types.ObjectId, ref: "Group", required: true },
     member: { type: Schema.Types.ObjectId, ref: "Member", required: true },
     createdBy: { type: Schema.Types.ObjectId, ref: "Staffs", required: true },
 
