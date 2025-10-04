@@ -55,7 +55,19 @@ const BusinessRuleSchema: Schema = new Schema(
     createdBy: { type: Schema.Types.ObjectId, ref: "Staff", required: true },
     updatedBy: { type: Schema.Types.ObjectId, ref: "Staff" },
   },
-  { timestamps: true }
+  {
+    timestamps: true
+  }
 );
+
+// Transform output
+BusinessRuleSchema.set("toJSON", {
+  transform: function (doc, ret: any) {
+    ret.id = ret._id.toString(); // expose as id
+    delete ret._id;              // remove _id
+    delete ret.__v;              // remove version key
+    return ret;
+  },
+});
 
 export default mongoose.model<IBusinessRule>("BusinessRule", BusinessRuleSchema);

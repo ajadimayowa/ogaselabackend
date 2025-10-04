@@ -59,68 +59,74 @@ export const getBusinessRuleProducts = async (req: Request, res: Response):Promi
     }
 };
 
-// ✅ UPDATE Business Rule (with change history)
-export const updateBusinessRule = async (req: Request, res: Response):Promise<any> => {
-    try {
-        const { companyId } = req.params;
-        const { interestRates, loanDurations, penaltyFee, dailyLatePercentage, updatedBy } = req.body;
+// Controller
+export const updateBusinessRule = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { companyId } = req.params;
+    const { interestRates, loanDurations, penaltyFee, dailyLatePercentage, updatedBy } = req.body;
 
-        const rule = await BusinessRule.findOne({ companyId });
-        if (!rule) {
-            return res.status(404).json({ message: "Business rule not found" });
-        }
-
-        // Track changes
-        const updates: any = {};
-        if (interestRates !== undefined && interestRates !== rule.interestRates) {
-            rule.changeHistory.push({
-                changedBy: updatedBy,
-                oldValue: rule.interestRates,
-                newValue: interestRates,
-                field: "interestRate",
-                changedAt: new Date()
-            });
-            updates.interestRate = interestRates;
-        }
-        if (loanDurations !== undefined) {
-            rule.changeHistory.push({
-                changedBy: updatedBy,
-                oldValue: rule.loanDurations,
-                newValue: loanDurations,
-                field: "loanDurations",
-                changedAt: new Date()
-            });
-            updates.loanDurations = loanDurations;
-        }
-        if (penaltyFee !== undefined && penaltyFee !== rule.penaltyFee) {
-            rule.changeHistory.push({
-                changedBy: updatedBy,
-                oldValue: rule.penaltyFee,
-                newValue: penaltyFee,
-                field: "penaltyFee",
-                changedAt: new Date()
-            });
-            updates.penaltyFee = penaltyFee;
-        }
-        if (dailyLatePercentage !== undefined && dailyLatePercentage !== rule.dailyLatePercentage) {
-            rule.changeHistory.push({
-                changedBy: updatedBy,
-                oldValue: rule.dailyLatePercentage,
-                newValue: dailyLatePercentage,
-                field: "dailyLatePercentage",
-                changedAt: new Date()
-            });
-            updates.dailyLatePercentage = dailyLatePercentage;
-        }
-
-        Object.assign(rule, updates);
-        rule.updatedBy = updatedBy;
-        await rule.save();
-
-        return res.status(200).json({ message: "Business rule updated successfully", data: rule });
-    } catch (error) {
-        return res.status(500).json({ message: "Error updating business rule", error });
+    const rule = await BusinessRule.findOne({ companyId });
+    if (!rule) {
+      return res.status(404).json({ message: "Business rule not found" });
     }
+
+    // Track changes
+    const updates: any = {};
+
+    // 🔹 Compare interestRates deeply before logging
+    if (interestRates !== undefined && JSON.stringify(interestRates) !== JSON.stringify(rule.interestRates)) {
+      rule.changeHistory.push({
+        changedBy: updatedBy,
+        oldValue: rule.interestRates,
+        newValue: interestRates,
+        field: "interestRates",
+        changedAt: new Date()
+      });
+      updates.interestRates = interestRates;
+    }
+
+    if (loanDurations !== undefined && loanDurations !== rule.loanDurations) {
+      rule.changeHistory.push({
+        changedBy: updatedBy,
+        oldValue: rule.loanDurations,
+        newValue: loanDurations,
+        field: "loanDurations",
+        changedAt: new Date()
+      });
+      updates.loanDurations = loanDurations;
+    }
+
+    if (penaltyFee !== undefined && penaltyFee !== rule.penaltyFee) {
+      rule.changeHistory.push({
+        changedBy: updatedBy,
+        oldValue: rule.penaltyFee,
+        newValue: penaltyFee,
+        field: "penaltyFee",
+        changedAt: new Date()
+      });
+      updates.penaltyFee = penaltyFee;
+    }
+
+    if (dailyLatePercentage !== undefined && dailyLatePercentage !== rule.dailyLatePercentage) {
+      rule.changeHistory.push({
+        changedBy: updatedBy,
+        oldValue: rule.dailyLatePercentage,
+        newValue: dailyLatePercentage,
+        field: "dailyLatePercentage",
+        changedAt: new Date()
+      });
+      updates.dailyLatePercentage = dailyLatePercentage;
+    }
+
+    // Apply updates
+    Object.assign(rule, updates);
+    rule.updatedBy = updatedBy; // 🔹 ideally from token (req.user.id)
+    await rule.save();
+
+    return res.status(200).json({ message: "Business rule updated successfully", data: rule });
+  } catch (error) {
+    return res.status(500).json({ message: "Error updating business rule", error });
+  }
 };
 
 // ✅ DELETE Business Rule

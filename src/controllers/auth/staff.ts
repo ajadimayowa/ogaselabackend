@@ -11,6 +11,7 @@ import {Organization} from '../../models/Organization';
 import { Department } from '../../models/Department.model';
 import Role from '../../models/Role';
 import { sendLoginOtp } from '../../services/sms/smsSender';
+import BusinessRule from '../../models/BusinessRule';
 
 export interface IApiResponse<T = any> {
   data: {
@@ -116,8 +117,10 @@ export const verifyLoginOtp = async (req: Request, res: Response) => {
 
     const token = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
-    const organization = await Organization.findById(staff.organization)
-    .populate('businessRule');
+    const organization = await Organization.findById(staff.organization);
+    const businessRule = await BusinessRule.findOne({
+  companyId: staff.organization
+}).lean();
     const staffDepartment = await Department.findById(staff.department);
     const staffRole = await Role.findById(staff.roles[0]);
 
@@ -159,7 +162,7 @@ export const verifyLoginOtp = async (req: Request, res: Response) => {
       orgRegNumber: organization?.regNumber,
       createdAt: organization?.createdAt,
       updatedAt: organization?.updatedAt,
-      businessRule:organization?.businessRule
+      businessRule:businessRule
     }
     let staffDepartmentData = {
       id: staffDepartment?.id,
