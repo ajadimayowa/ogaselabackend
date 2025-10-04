@@ -67,7 +67,7 @@ const getBusinessRuleProducts = (req, res) => __awaiter(void 0, void 0, void 0, 
     }
 });
 exports.getBusinessRuleProducts = getBusinessRuleProducts;
-// ✅ UPDATE Business Rule (with change history)
+// Controller
 const updateBusinessRule = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { companyId } = req.params;
@@ -78,17 +78,18 @@ const updateBusinessRule = (req, res) => __awaiter(void 0, void 0, void 0, funct
         }
         // Track changes
         const updates = {};
-        if (interestRates !== undefined && interestRates !== rule.interestRates) {
+        // 🔹 Compare interestRates deeply before logging
+        if (interestRates !== undefined && JSON.stringify(interestRates) !== JSON.stringify(rule.interestRates)) {
             rule.changeHistory.push({
                 changedBy: updatedBy,
                 oldValue: rule.interestRates,
                 newValue: interestRates,
-                field: "interestRate",
+                field: "interestRates",
                 changedAt: new Date()
             });
-            updates.interestRate = interestRates;
+            updates.interestRates = interestRates;
         }
-        if (loanDurations !== undefined) {
+        if (loanDurations !== undefined && loanDurations !== rule.loanDurations) {
             rule.changeHistory.push({
                 changedBy: updatedBy,
                 oldValue: rule.loanDurations,
@@ -118,8 +119,9 @@ const updateBusinessRule = (req, res) => __awaiter(void 0, void 0, void 0, funct
             });
             updates.dailyLatePercentage = dailyLatePercentage;
         }
+        // Apply updates
         Object.assign(rule, updates);
-        rule.updatedBy = updatedBy;
+        rule.updatedBy = updatedBy; // 🔹 ideally from token (req.user.id)
         yield rule.save();
         return res.status(200).json({ message: "Business rule updated successfully", data: rule });
     }

@@ -37,6 +37,7 @@ const mongoose_1 = __importStar(require("mongoose"));
 const LoanSchema = new mongoose_1.Schema({
     organization: { type: mongoose_1.Schema.Types.ObjectId, ref: "Organization", required: true },
     branch: { type: mongoose_1.Schema.Types.ObjectId, ref: "Branch", required: true },
+    group: { type: mongoose_1.Schema.Types.ObjectId, ref: "Group", required: true },
     member: { type: mongoose_1.Schema.Types.ObjectId, ref: "Member", required: true },
     createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "Staffs", required: true },
     principal: { type: Number, required: true },

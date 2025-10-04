@@ -21,7 +21,7 @@ const createLoan = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const session = yield mongoose_1.default.startSession();
     session.startTransaction();
     try {
-        const { organization, branch, principal, interestRate, tenureMonths, lateFeeRate, calculationMethod, member, marketerId } = req.body;
+        const { organization, branch, principal, interestRate, tenureMonths, lateFeeRate, calculationMethod, member, group, marketerId } = req.body;
         // 1. Fetch branch and check balance
         const branchDoc = yield Branch_model_1.Branch.findById(branch).session(session);
         if (!branchDoc) {
@@ -42,6 +42,7 @@ const createLoan = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             {
                 organization: organization,
                 branch,
+                group,
                 member,
                 createdBy: marketerId,
                 principal,
@@ -94,16 +95,18 @@ const getLoans = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         // Query with filters, pagination, and sorting
         const [loans, total] = yield Promise.all([
             Loan_model_1.default.find(filters)
-                .populate("member", "profile.fullName contact.email group")
-                .populate("branch", "name")
-                .populate("createdBy", "fullName email")
+                .populate("member")
+                .populate("group")
+                .populate("branch")
+                .populate("createdBy")
                 .skip(skip)
                 .limit(limitNum)
                 .sort({ createdAt: -1 }),
             Loan_model_1.default.countDocuments(filters),
         ]);
-        return res.json({
-            loans,
+        return res.status(200).json({
+            success: true,
+            payload: loans,
             pagination: {
                 total,
                 page: pageNum,
@@ -120,12 +123,13 @@ exports.getLoans = getLoans;
 const getLoanById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const loan = yield Loan_model_1.default.findById(req.params.id)
-            .populate("member", "profile.fullName contact.email")
+            .populate("member")
+            .populate("group")
             .populate("branch", "name")
             .populate("createdBy", "fullName email");
         if (!loan)
             return res.status(404).json({ message: "Loan not found" });
-        return res.json({ loan });
+        return res.json({ success: true, payload: loan });
     }
     catch (error) {
         return res.status(500).json({ message: error.message });

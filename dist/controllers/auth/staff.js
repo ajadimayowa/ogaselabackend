@@ -22,6 +22,7 @@ const emailTypesHandler_1 = require("../../services/email/emailTypesHandler");
 const Organization_1 = require("../../models/Organization");
 const Department_model_1 = require("../../models/Department.model");
 const Role_1 = __importDefault(require("../../models/Role"));
+const BusinessRule_1 = __importDefault(require("../../models/BusinessRule"));
 const loginStaff = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     try {
@@ -100,8 +101,10 @@ const verifyLoginOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
             userClass: staff.userClass,
         };
         const token = jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
-        const organization = yield Organization_1.Organization.findById(staff.organization)
-            .populate('businessRule');
+        const organization = yield Organization_1.Organization.findById(staff.organization);
+        const businessRule = yield BusinessRule_1.default.findOne({
+            companyId: staff.organization
+        }).lean();
         const staffDepartment = yield Department_model_1.Department.findById(staff.department);
         const staffRole = yield Role_1.default.findById(staff.roles[0]);
         let staffData = {
@@ -142,7 +145,7 @@ const verifyLoginOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
             orgRegNumber: organization === null || organization === void 0 ? void 0 : organization.regNumber,
             createdAt: organization === null || organization === void 0 ? void 0 : organization.createdAt,
             updatedAt: organization === null || organization === void 0 ? void 0 : organization.updatedAt,
-            businessRule: organization === null || organization === void 0 ? void 0 : organization.businessRule
+            businessRule: businessRule
         };
         let staffDepartmentData = {
             id: staffDepartment === null || staffDepartment === void 0 ? void 0 : staffDepartment.id,
