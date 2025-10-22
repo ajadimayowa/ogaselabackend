@@ -44,7 +44,7 @@ export const sendMail = async (
   });
 
   const mailerOptions = {
-    from: '"BCKash" <hello@floatsolutionhub.com>', // Sender address
+    from: '"Olive From Ogasela" <hello@floatsolutionhub.com>', // Sender address
     to: userEmail, // Recipient's email address
     subject: subject,
     html: html,

@@ -34,24 +34,58 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const BranchSchema = new mongoose_1.Schema({
-    nameOfBranch: { type: String, required: true },
-    branchManager: {
-        id: { type: String, required: true },
-        fullName: { type: String, required: true }
+const categorySchema = new mongoose_1.Schema({
+    name: {
+        type: String,
+        required: [true, "Category name is required"],
+        trim: true,
+        unique: true,
     },
-    branchAddress: { type: String, required: true },
-    state: { type: String, required: true },
-    lga: { type: String, required: true },
-    createdByName: { type: String, required: true },
-    createdById: { type: String, required: true },
-    selectedApprover: { type: String, required: false },
-    approvedById: { type: String },
-    approvedName: { type: String },
-    isApproved: { type: Boolean, default: false },
-    isDisabled: { type: Boolean, default: false },
-    isDeleted: { type: Boolean, default: false },
-    organization: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Organization', required: true },
-}, { timestamps: true });
-BranchSchema.index({ nameOfBranch: 1, organization: 1 }, { unique: true });
-exports.default = mongoose_1.default.model('Branch', BranchSchema);
+    description: {
+        type: String,
+        trim: true,
+    },
+    slug: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true,
+    },
+    image: {
+        type: String,
+        default: "",
+    },
+    parentCategory: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "Category",
+        default: null,
+    },
+    isActive: {
+        type: Boolean,
+        default: true,
+    },
+}, {
+    timestamps: true,
+    toJSON: {
+        virtuals: true,
+        versionKey: false,
+        transform: function (_doc, ret) {
+            ret.id = ret._id.toString();
+            delete ret._id;
+            return ret;
+        }
+    }
+});
+// 🔁 Auto-generate slug from category name before saving
+categorySchema.pre("save", function (next) {
+    if (this.isModified("name")) {
+        this.slug = this.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)+/g, "");
+    }
+    next();
+});
+const Category = mongoose_1.default.model("Category", categorySchema);
+exports.default = Category;

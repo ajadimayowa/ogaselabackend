@@ -5,6 +5,12 @@ import connectDB from './config/db';
 import morgan from 'morgan';
 
 import authRoutes from './routes/auth.routes';
+import categoryRoutes from './routes/category/category.routes';
+import sliderRoutes from './routes/slider/slider.routes';
+import homeRoutes from './routes/homePage/homePage.route';
+import adRoutes from './routes/ad/ad.routes'
+
+
 import orgRoutes from './routes/organization/org.routes';
 import roleRoutes from './routes/role.routes';
 import userRoleRoutes from './routes/userRole.routes';
@@ -41,6 +47,12 @@ app.use(express.json());
 const apiPrefix = '/api/v1/';
 
 // Routes
+app.use(apiPrefix,categoryRoutes);
+app.use(apiPrefix,sliderRoutes);
+app.use(apiPrefix,homeRoutes);
+app.use(apiPrefix,adRoutes);
+
+app.use(apiPrefix,categoryRoutes);
 app.use(apiPrefix, creatorRoutes);
 app.use(apiPrefix, orgRoutes);
 app.use(apiPrefix, branchRoutes);
@@ -55,6 +67,7 @@ app.use(apiPrefix, groupRoutes);
 app.use(apiPrefix, memberRoutes);
 app.use(apiPrefix, businessRuleRoutes);
 app.use(apiPrefix, loanRoutes);
+
 
 
 

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/Staff';
 import { Creator } from '../models/Creator.model';
+import UserModel from '../models/User.model';
 
 // export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
 //   const authHeader = req.headers.authorization;
@@ -62,6 +63,31 @@ export const verifyRootAdminToken = async (req: Request, res: Response, next: Ne
     }
 
     (req as any).user = creator;
+    next(); // ✅ move on to controller
+  } catch (err) {
+    res.status(401).json({ msg: 'Token failed' });
+  }
+};
+
+
+export const verifyUserToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    res.status(401).json({ msg: 'No token provided' });
+    return;
+  }
+
+  try {
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+    const user = await UserModel.findById(decoded.id);
+    if (!user) {
+      res.status(403).json({ msg: 'Invalid token' });
+      return;
+    }
+
+    (req as any).user = user;
     next(); // ✅ move on to controller
   } catch (err) {
     res.status(401).json({ msg: 'Token failed' });

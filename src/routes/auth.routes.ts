@@ -1,22 +1,28 @@
 import { Router } from 'express';
 // import { register, login } from '../controllers/auth.controller';
-import { adminRegisterStaff,verifyOtp } from '../controllers/auth.controller';
+import { createUser,loginUser,verifyUserEmail,verifyLoginOtp, requestPasswordResetOtp,resetUserPasswordWithOtp } from '../controllers/auth/user';
+import { verifyToken } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// router.post('/register-super-admin',registerSuperAdmin);
+router.post('/auth/register', createUser);
+router.post('/auth/login', loginUser);
+router.post('/auth/verify-otp', verifyLoginOtp);
+router.post('/auth/request-password-reset-otp', requestPasswordResetOtp);
+router.post('/auth/reset-password-with-otp', resetUserPasswordWithOtp);
 
-router.post('/auth/register-staff', (req, res, next) => {
-  Promise.resolve(adminRegisterStaff(req, res)).catch(next);
-});
 
-router.put('/auth/update-staff', (req, res, next) => {
-  Promise.resolve(adminRegisterStaff(req, res)).catch(next);
-});
+// router.post('/register-staff', (req, res, next) => {
+//   Promise.resolve(adminRegisterStaff(req, res)).catch(next);
+// });
 
-router.post('/auth/verify-email', (req, res, next) => {
-  Promise.resolve(adminRegisterStaff(req, res)).catch(next);
-});
+// router.put('/update-staff', (req, res, next) => {
+//   Promise.resolve(adminRegisterStaff(req, res)).catch(next);
+// });
+
+// router.post('/verify-email', (req, res, next) => {
+//   Promise.resolve(adminRegisterStaff(req, res)).catch(next);
+// });
 
 
 
@@ -25,8 +31,8 @@ router.post('/auth/verify-email', (req, res, next) => {
 //   Promise.resolve(staffLogin(req, res)).catch(next);
 // });
 
-router.post('/verify-login-otp', (req, res, next) => {
-  Promise.resolve(verifyOtp(req, res)).catch(next);
-});
+// router.post('/verify-login-otp', (req, res, next) => {
+//   Promise.resolve(verifyOtp(req, res)).catch(next);
+// });
 
 export default router;

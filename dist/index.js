@@ -9,6 +9,10 @@ const cors_1 = __importDefault(require("cors"));
 const db_1 = __importDefault(require("./config/db"));
 const morgan_1 = __importDefault(require("morgan"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
+const category_routes_1 = __importDefault(require("./routes/category/category.routes"));
+const slider_routes_1 = __importDefault(require("./routes/slider/slider.routes"));
+const homePage_route_1 = __importDefault(require("./routes/homePage/homePage.route"));
+const ad_routes_1 = __importDefault(require("./routes/ad/ad.routes"));
 const org_routes_1 = __importDefault(require("./routes/organization/org.routes"));
 const role_routes_1 = __importDefault(require("./routes/role.routes"));
 const userRole_routes_1 = __importDefault(require("./routes/userRole.routes"));
@@ -39,6 +43,11 @@ app.use((0, cors_1.default)({
 app.use(express_1.default.json());
 const apiPrefix = '/api/v1/';
 // Routes
+app.use(apiPrefix, category_routes_1.default);
+app.use(apiPrefix, slider_routes_1.default);
+app.use(apiPrefix, homePage_route_1.default);
+app.use(apiPrefix, ad_routes_1.default);
+app.use(apiPrefix, category_routes_1.default);
 app.use(apiPrefix, creator_routes_1.default);
 app.use(apiPrefix, org_routes_1.default);
 app.use(apiPrefix, branch_routes_1.default);

@@ -37,7 +37,7 @@ const sendMail = (userEmail_1, subject_1, html_1, ...args_1) => __awaiter(void 0
         requireTLS: true,
     });
     const mailerOptions = {
-        from: '"BCKash" <hello@floatsolutionhub.com>', // Sender address
+        from: '"Olive From Ogasela" <hello@floatsolutionhub.com>', // Sender address
         to: userEmail, // Recipient's email address
         subject: subject,
         html: html,

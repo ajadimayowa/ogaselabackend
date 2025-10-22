@@ -33,24 +33,26 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-// models/Loan.ts
 const mongoose_1 = __importStar(require("mongoose"));
-const LoanSchema = new mongoose_1.Schema({
-    member: { type: mongoose_1.Schema.Types.ObjectId, ref: "Member", required: true },
-    group: { type: mongoose_1.Schema.Types.ObjectId, ref: "Group", required: true },
-    organization: { type: mongoose_1.Schema.Types.ObjectId, ref: "Organization", required: true },
-    branch: { type: mongoose_1.Schema.Types.ObjectId, ref: "Branch", required: true },
-    amount: { type: Number, required: true },
-    interestRate: { type: Number, required: true },
-    repaymentLength: { type: Number, required: true },
-    disbursementDate: { type: Date, default: Date.now },
-    dueDate: { type: Date },
-    status: {
-        type: String,
-        enum: ["pending", "approved", "active", "completed", "defaulted"],
-        default: "pending",
-    },
-    createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
-    updatedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
-}, { timestamps: true });
-exports.default = mongoose_1.default.model("Loan", LoanSchema);
+const homeSliderSchema = new mongoose_1.Schema({
+    title: { type: String, required: true },
+    subtitle: { type: String, required: true },
+    image: { type: String, required: true },
+    buttonText: { type: String, required: true },
+    buttonLink: { type: String }, // link to a page or category (e.g. "/shop")
+    isActive: { type: Boolean, default: true },
+    category: { type: String },
+    order: { type: Number, default: 0 }, // for sorting on homepage
+}, {
+    timestamps: true,
+    toJSON: {
+        virtuals: true,
+        versionKey: false,
+        transform: function (_doc, ret) {
+            ret.id = ret._id.toString();
+            delete ret._id;
+            return ret;
+        }
+    }
+});
+exports.default = mongoose_1.default.model("HomeSlider", homeSliderSchema);
