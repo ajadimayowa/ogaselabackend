@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import User from "../../models/User.model";
 import mongoose from "mongoose";
 import * as crypto from "crypto";
+import UserModel from "../../models/User.model";
 
 
 // Get all users (with pagination & search)
@@ -58,7 +59,8 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
             return;
         }
 
-        const user = await User.findById(id).populate("ads", "title price");
+       
+        const user = await UserModel.findById(id).select("-profile.password");
         if (!user) {
             res.status(404).json({ message: "User not found" });
             return;
@@ -66,7 +68,7 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
 
         res.status(200).json({
             message: "User retrieved successfully",
-            data: user,
+            payload: user,
         });
     } catch (error) {
         res.status(500).json({

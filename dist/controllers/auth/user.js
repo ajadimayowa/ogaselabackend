@@ -147,7 +147,7 @@ const verifyLoginOtp = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const normalizedEmail = email.trim().toLowerCase();
     // console.log({email, otp});
     try {
-        const user = yield User_model_1.default.findOne({ "contact.email": normalizedEmail });
+        const user = yield User_model_1.default.findOne({ "contact.email": normalizedEmail }).select("-profile.password");
         console.log({ seeStaffHere: user });
         // const organisation = Organization.findById(staff?.organization)
         if (!user) {

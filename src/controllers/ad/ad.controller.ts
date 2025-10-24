@@ -66,6 +66,7 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       sellerName,
       reviewCount,
       category,
+      isActive:true,
       subCategory,
       condition,
       location:{
@@ -103,13 +104,26 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
  */
 export const getAds = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { page = 1, limit = 10, search = "", category, seller } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      category,
+      seller,
+      sortBy = "createdAt", // default sort
+      order = "desc",       // optional: "asc" or "desc"
+    } = req.query;
 
     const query: any = {};
 
+    // 🔍 Search by title or seller name
     if (search) {
-      query.title = { $regex: search, $options: "i" };
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { "seller.profile.fullName": { $regex: search, $options: "i" } },
+      ];
     }
+
     if (category) {
       query.category = category;
     }
@@ -119,11 +133,21 @@ export const getAds = async (req: Request, res: Response): Promise<void> => {
 
     const skip = (Number(page) - 1) * Number(limit);
 
+    // ⚙️ Sorting options
+    const sortOptions: Record<string, 1 | -1> = {};
+    if (sortBy === "price") sortOptions.price = order === "asc" ? 1 : -1;
+    else if (sortBy === "city") sortOptions["location.city"] = order === "asc" ? 1 : -1;
+    else sortOptions.createdAt = order === "asc" ? 1 : -1; // default newest first
+
+    // 🧮 Total count
     const totalAds = await AdModel.countDocuments(query);
+
+    // 🧾 Fetch ads
     const ads = await AdModel.find(query)
       .populate("category", "name")
       .populate("seller", "profile.fullName profile.profilePicUrl")
-      .sort({ createdAt: -1 })
+      .populate("location")
+      .sort(sortOptions)
       .skip(skip)
       .limit(Number(limit));
 
@@ -138,6 +162,7 @@ export const getAds = async (req: Request, res: Response): Promise<void> => {
       data: ads,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, message: "Error fetching ads", error });
   }
 };
@@ -152,7 +177,7 @@ export const getAdById = async (req: Request, res: Response): Promise<void> => {
 
     const ad = await AdModel.findById(id)
       .populate("category", "name")
-      .populate("seller", "profile.fullName profile.profilePicUrl storeName rating totalSales");
+      .populate("seller", "profile.fullName profile.profilePicUrl storeName rating totalSales contact.phoneNumber");
 
     if (!ad) {
       res.status(404).json({ success: false, message: "Ad not found" });

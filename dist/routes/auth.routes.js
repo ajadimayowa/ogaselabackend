@@ -7,6 +7,7 @@ const router = (0, express_1.Router)();
 router.post('/auth/register', user_1.createUser);
 router.post('/auth/login', user_1.loginUser);
 router.post('/auth/verify-otp', user_1.verifyLoginOtp);
+router.post('/auth/verify-email-otp', user_1.verifyUserEmail);
 router.post('/auth/request-password-reset-otp', user_1.requestPasswordResetOtp);
 router.post('/auth/reset-password-with-otp', user_1.resetUserPasswordWithOtp);
 // router.post('/register-staff', (req, res, next) => {

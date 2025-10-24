@@ -46,6 +46,7 @@ const userSchema = new mongoose_1.Schema({
     contact: {
         email: { type: String, required: true, unique: true },
         phoneNumber: { type: String, required: true, unique: true },
+        address: { type: String },
     },
     kyc: {
         idCardNumber: { type: String },

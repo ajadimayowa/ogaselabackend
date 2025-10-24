@@ -8,7 +8,8 @@ import authRoutes from './routes/auth.routes';
 import categoryRoutes from './routes/category/category.routes';
 import sliderRoutes from './routes/slider/slider.routes';
 import homeRoutes from './routes/homePage/homePage.route';
-import adRoutes from './routes/ad/ad.routes'
+import adRoutes from './routes/ad/ad.routes';
+import userRoutes from './routes/user/user.routes'
 
 
 import orgRoutes from './routes/organization/org.routes';
@@ -51,6 +52,8 @@ app.use(apiPrefix,categoryRoutes);
 app.use(apiPrefix,sliderRoutes);
 app.use(apiPrefix,homeRoutes);
 app.use(apiPrefix,adRoutes);
+
+app.use(apiPrefix,userRoutes);
 
 app.use(apiPrefix,categoryRoutes);
 app.use(apiPrefix, creatorRoutes);

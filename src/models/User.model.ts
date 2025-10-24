@@ -13,6 +13,7 @@ export interface IUser extends Document {
     contact: {
         email: string;
         phoneNumber: string;
+        address:string
     };
     kyc: {
         idCardNumber?: string;
@@ -28,10 +29,10 @@ export interface IUser extends Document {
     emailVerificationExpires?: Date;
     isDisable: boolean;
     isBanned: boolean;
-loginOtp:string | undefined;
-loginOtpExpires?: Date;
-resetPasswordOtp:string | undefined;
-resetPasswordOtpExpires:Date;
+    loginOtp: string | undefined;
+    loginOtpExpires?: Date;
+    resetPasswordOtp: string | undefined;
+    resetPasswordOtpExpires: Date;
 
     isActive: boolean;
     storeName?: string;
@@ -52,6 +53,7 @@ const userSchema = new Schema<IUser>(
         contact: {
             email: { type: String, required: true, unique: true },
             phoneNumber: { type: String, required: true, unique: true },
+            address: { type: String},
         },
         kyc: {
             idCardNumber: { type: String },
@@ -66,8 +68,8 @@ const userSchema = new Schema<IUser>(
         emailVerificationExpires: { type: Date },
         isDisable: { type: Boolean, default: false },
         isBanned: { type: Boolean, default: false },
-        loginOtp:{ type: String },
-        resetPasswordOtp:{ type: String },
+        loginOtp: { type: String },
+        resetPasswordOtp: { type: String },
         loginOtpExpires: { type: Date },
         resetPasswordOtpExpires: { type: Date },
 

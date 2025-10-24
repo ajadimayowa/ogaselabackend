@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteUser = exports.updateUser = exports.getUserById = exports.getAllUsers = void 0;
 const User_model_1 = __importDefault(require("../../models/User.model"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const User_model_2 = __importDefault(require("../../models/User.model"));
 // Get all users (with pagination & search)
 const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -62,14 +63,14 @@ const getUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             res.status(400).json({ message: "Invalid user ID" });
             return;
         }
-        const user = yield User_model_1.default.findById(id).populate("ads", "title price");
+        const user = yield User_model_2.default.findById(id).select("-profile.password");
         if (!user) {
             res.status(404).json({ message: "User not found" });
             return;
         }
         res.status(200).json({
             message: "User retrieved successfully",
-            data: user,
+            payload: user,
         });
     }
     catch (error) {

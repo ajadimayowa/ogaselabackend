@@ -31,7 +31,7 @@ export interface IApiResponse<T = any> {
 export const createUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { fullName, email, phoneNumber, password } = req.body;
-    let properEmail:string = email.trim().toLowerCase() || ''
+    let properEmail: string = email.trim().toLowerCase() || ''
 
     // Check if user already exists
     const existingUser = await UserModel.findOne({ "contact.email": properEmail });
@@ -51,13 +51,13 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
     let lastName = fullName.split(' ')[1]
     const newUser = await UserModel.create({
       profile: { fullName, firstName, lastName, password: hashedPassword },
-      contact: { email:properEmail, phoneNumber },
-      emailVerificationToken:emailVerificationCode,
+      contact: { email: properEmail, phoneNumber },
+      emailVerificationToken: emailVerificationCode,
       emailVerificationExpires,
     });
 
     // Send email verification
-    await sendUserRegistrationNotificationEmail({firstName,email:properEmail,emailVerificationCode});
+    await sendUserRegistrationNotificationEmail({ firstName, email: properEmail, emailVerificationCode });
 
     res.status(201).json({
       message: "User registered successfully. Please check your email to verify your account.",
@@ -142,7 +142,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
     //   firstName:staff.firstName
     // })
     try {
-      await sendUserLoginOtpNotificationEmail({firstName:user.profile.firstName, email:user.contact.email, loginOtpCode:otp});
+      await sendUserLoginOtpNotificationEmail({ firstName: user.profile.firstName, email: user.contact.email, loginOtpCode: otp });
     } catch (error) {
       console.error('Error sending OTP email:', error);
     }
@@ -172,7 +172,7 @@ export const verifyLoginOtp = async (req: Request, res: Response): Promise<any> 
   // console.log({email, otp});
 
   try {
-    const user = await UserModel.findOne({ "contact.email": normalizedEmail })
+    const user = await UserModel.findOne({ "contact.email": normalizedEmail }).select("-profile.password");
     console.log({ seeStaffHere: user })
     // const organisation = Organization.findById(staff?.organization)
 
@@ -211,7 +211,7 @@ export const verifyLoginOtp = async (req: Request, res: Response): Promise<any> 
         userBio: user
       }
     });
-    await sendUserLoginNotificationEmail({firstName:user.profile.firstName,email:user.contact.email,loginOtpCode:otp});
+    await sendUserLoginNotificationEmail({ firstName: user.profile.firstName, email: user.contact.email, loginOtpCode: otp });
     return
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
@@ -248,7 +248,7 @@ export const requestPasswordResetOtp = async (req: Request, res: Response) => {
     await user.save();
 
     try {
-      await sendUserPasswordResetOtpEmail({firstName:user.profile.firstName, email:user.contact.email, passwordResetOtpCode:otp});
+      await sendUserPasswordResetOtpEmail({ firstName: user.profile.firstName, email: user.contact.email, passwordResetOtpCode: otp });
     } catch (err) {
       console.error('Error sending reset OTP email:', err);
     }
@@ -278,7 +278,7 @@ export const resetUserPasswordWithOtp = async (req: Request, res: Response) => {
       success: false,
       message: 'Email, OTP, and new password are required',
     });
-    
+
     return;
   }
 
@@ -318,7 +318,7 @@ export const resetUserPasswordWithOtp = async (req: Request, res: Response) => {
       success: true,
       message: 'Password reset successful',
     });
-    await sendUserPasswordResetNotificationEmail({firstName:staff.profile.firstName,email:staff.contact.email,loginOtpCode:otp});
+    await sendUserPasswordResetNotificationEmail({ firstName: staff.profile.firstName, email: staff.contact.email, loginOtpCode: otp });
     return;
   } catch (err) {
     res.status(500).json({

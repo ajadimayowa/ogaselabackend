@@ -5,7 +5,7 @@ import User from "../../models/User.model";
 import AdModel from "../../models/Ad.model";
 
 export const getHomePage = async (req: Request, res: Response): Promise<void> => {
-    console.log('hiy')
+  
   try {
     // 1️⃣ Fetch home slider objects (active banners)
     const homeSliderObjects = await SliderModel.find({ isActive: true })
@@ -19,15 +19,14 @@ export const getHomePage = async (req: Request, res: Response): Promise<void> =>
       .limit(8);
 
        const recentlyPosted = await AdModel.find({ isActive: true })
-      .sort({ rating: -1 })
+      .sort({ createdAt: -1 })
       .limit(8)
       // .select("storeName rating profilePic");
 
     // 3️⃣ Fetch top-rated sellers
-    const topRatedSellers = await User.find({ isActive: true })
-      .sort({ rating: -1 })
+    const topRatedSellers = await AdModel.find({ isActive: true })
+      .sort({ views: -1 })
       .limit(8)
-      .select("storeName rating profilePic");
 
     // 4️⃣ Fetch best sellers (based on sales count or performance)
     const bestSellers = await User.find({ isActive: true })

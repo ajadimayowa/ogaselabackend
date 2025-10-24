@@ -13,6 +13,7 @@ const category_routes_1 = __importDefault(require("./routes/category/category.ro
 const slider_routes_1 = __importDefault(require("./routes/slider/slider.routes"));
 const homePage_route_1 = __importDefault(require("./routes/homePage/homePage.route"));
 const ad_routes_1 = __importDefault(require("./routes/ad/ad.routes"));
+const user_routes_1 = __importDefault(require("./routes/user/user.routes"));
 const org_routes_1 = __importDefault(require("./routes/organization/org.routes"));
 const role_routes_1 = __importDefault(require("./routes/role.routes"));
 const userRole_routes_1 = __importDefault(require("./routes/userRole.routes"));
@@ -47,6 +48,7 @@ app.use(apiPrefix, category_routes_1.default);
 app.use(apiPrefix, slider_routes_1.default);
 app.use(apiPrefix, homePage_route_1.default);
 app.use(apiPrefix, ad_routes_1.default);
+app.use(apiPrefix, user_routes_1.default);
 app.use(apiPrefix, category_routes_1.default);
 app.use(apiPrefix, creator_routes_1.default);
 app.use(apiPrefix, org_routes_1.default);

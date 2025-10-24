@@ -8,8 +8,10 @@ const router = Router();
 router.post('/auth/register', createUser);
 router.post('/auth/login', loginUser);
 router.post('/auth/verify-otp', verifyLoginOtp);
+router.post('/auth/verify-email-otp', verifyUserEmail);
 router.post('/auth/request-password-reset-otp', requestPasswordResetOtp);
 router.post('/auth/reset-password-with-otp', resetUserPasswordWithOtp);
+
 
 
 // router.post('/register-staff', (req, res, next) => {

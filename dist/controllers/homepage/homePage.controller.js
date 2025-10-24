@@ -18,7 +18,6 @@ const Slider_model_1 = __importDefault(require("../../models/Slider.model"));
 const User_model_1 = __importDefault(require("../../models/User.model"));
 const Ad_model_1 = __importDefault(require("../../models/Ad.model"));
 const getHomePage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('hiy');
     try {
         // 1️⃣ Fetch home slider objects (active banners)
         const homeSliderObjects = yield Slider_model_1.default.find({ isActive: true })
@@ -30,14 +29,13 @@ const getHomePage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             .sort({ createdAt: -1 })
             .limit(8);
         const recentlyPosted = yield Ad_model_1.default.find({ isActive: true })
-            .sort({ rating: -1 })
+            .sort({ createdAt: -1 })
             .limit(8);
         // .select("storeName rating profilePic");
         // 3️⃣ Fetch top-rated sellers
-        const topRatedSellers = yield User_model_1.default.find({ isActive: true })
-            .sort({ rating: -1 })
-            .limit(8)
-            .select("storeName rating profilePic");
+        const topRatedSellers = yield Ad_model_1.default.find({ isActive: true })
+            .sort({ views: -1 })
+            .limit(8);
         // 4️⃣ Fetch best sellers (based on sales count or performance)
         const bestSellers = yield User_model_1.default.find({ isActive: true })
             .sort({ totalSales: -1 })
