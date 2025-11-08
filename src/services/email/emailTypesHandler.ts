@@ -41,11 +41,17 @@ export const sendOrgWelcomeEmail = async ({nameOfOrg,orgRegNumber,orgEmail,orgPh
   const subject = 'Succesfull Registration.'
 
   try {
-    await sendMail(orgEmail, subject, html);
-    console.log('Welcome email sent successfully!');
-  } catch (error) {
-    console.error('Error sending welcome email:', error);
-  }
+  await sendMail({
+    userEmail: orgEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${orgEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${orgEmail}:`, error);
+}
 };
 
 export const sendBranchCreationEmail = async (nameOfOrg: string, orgEmail: string, nameOfDept: string, currentTime: string,createdByName:string) => {
@@ -65,11 +71,17 @@ export const sendBranchCreationEmail = async (nameOfOrg: string, orgEmail: strin
   const subject = 'New Branch Created.'
 
   try {
-    await sendMail(orgEmail, subject, html);
-    console.log('email sent successfully!');
-  } catch (error) {
-    console.error('Error email:', error);
-  }
+  await sendMail({
+    userEmail: orgEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${orgEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${orgEmail}:`, error);
+}
 };
 
 export const sendDeptCreationEmail = async (nameOfOrg: string, orgEmail: string, nameOfDept: string, currentTime: string,createdByName:string) => {
@@ -88,12 +100,18 @@ export const sendDeptCreationEmail = async (nameOfOrg: string, orgEmail: string,
   const html = template({ nameOfOrg, currentTime, nameOfDept,createdByName});
   const subject = 'New Department Created.'
 
-  try {
-    await sendMail(orgEmail, subject, html);
-    console.log('email sent successfully!');
-  } catch (error) {
-    console.error('Error email:', error);
-  }
+ try {
+  await sendMail({
+    userEmail: orgEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${orgEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${orgEmail}:`, error);
+}
 };
 
 
@@ -113,11 +131,17 @@ export const sendRoleCreationEmail = async ({ nameOfOrg, currentTime, nameOfRole
   const subject = 'New Role Created.'
 
   try {
-    await sendMail(orgEmail, subject, html);
-    console.log('email sent successfully!');
-  } catch (error) {
-    console.error('Error from Brevo email:', error);
-  }
+  await sendMail({
+    userEmail: orgEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${orgEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${orgEmail}:`, error);
+}
 };
 
 export const sendSuperAdminWelcomeEmail =
@@ -138,11 +162,17 @@ export const sendSuperAdminWelcomeEmail =
     const subject = 'Super Admin Registration.'
 
     try {
-      await sendMail(loginEmail, subject, html);
-      console.log('Welcome email sent successfully!');
-    } catch (error) {
-      console.error('Error sending welcome email:', error);
-    }
+  await sendMail({
+    userEmail: loginEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${loginEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${loginEmail}:`, error);
+}
   };
 
   export const sendStaffWelcomeEmail =
@@ -162,12 +192,18 @@ export const sendSuperAdminWelcomeEmail =
     const html = template({ firstName, loginEmail, tempPass, userClass,currentTime,nameOfOrg,staffLevel });
     const subject = 'Super Admin Registration.'
 
-    try {
-      await sendMail(loginEmail, subject, html);
-      console.log('Welcome email sent successfully!');
-    } catch (error) {
-      console.error('Error sending welcome email:', error);
-    }
+   try {
+  await sendMail({
+    userEmail: loginEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${loginEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${loginEmail}:`, error);
+}
   };
 
   
@@ -190,11 +226,17 @@ export const sendWelcomeEmail = async (firstName: string, userEmail: string, ver
   const subject = 'Email Verification Code'
 
   try {
-    await sendMail(userEmail, subject, html);
-    console.log('Welcome email sent successfully!');
-  } catch (error) {
-    console.error('Error sending welcome email:', error);
-  }
+  await sendMail({
+    userEmail: userEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${userEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${userEmail}:`, error);
+}
 };
 
 export const sendProfileUpdateEmail = async (fullName: string, userEmail: string, verificationCode: string) => {
@@ -206,11 +248,17 @@ export const sendProfileUpdateEmail = async (fullName: string, userEmail: string
   const subject = 'Profile updated!'
 
   try {
-    await sendMail(userEmail, subject, html);
-    console.log('Welcome email sent successfully!');
-  } catch (error) {
-    console.error('Error sending welcome email:', error);
-  }
+  await sendMail({
+    userEmail: userEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${userEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${userEmail}:`, error);
+}
 };
 
 export const sendPasswordResetEmail = async (fullName: string, userEmail: string, verificationCode: string) => {
@@ -221,12 +269,18 @@ export const sendPasswordResetEmail = async (fullName: string, userEmail: string
   const html = template({ fullName, verificationCode });
   const subject = 'Request to change password!'
 
-  try {
-    await sendMail(userEmail, subject, html);
-    // console.log('Welcome email sent successfully!');
-  } catch (error) {
-    console.error('Error sending welcome email:', error);
-  }
+ try {
+  await sendMail({
+    userEmail: userEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${userEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${userEmail}:`, error);
+}
 };
 
 export const sendPasswordChangedEmail = async (fullName: string, userEmail: string, verificationCode: string) => {
@@ -237,12 +291,18 @@ export const sendPasswordChangedEmail = async (fullName: string, userEmail: stri
   const html = template({ fullName, verificationCode });
   const subject = 'Password Changed!'
 
-  try {
-    await sendMail(userEmail, subject, html);
-    console.log('Welcome email sent successfully!');
-  } catch (error) {
-    console.error('Error sending welcome email:', error);
-  }
+ try {
+  await sendMail({
+    userEmail: userEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${userEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${userEmail}:`, error);
+}
 };
 
 export const sendLoginOtpEmail = async (firstName: string, userEmail: string, loginOtp: string) => {
@@ -261,11 +321,17 @@ export const sendLoginOtpEmail = async (firstName: string, userEmail: string, lo
   const subject = 'Login Otp!'
 
   try {
-    await sendMail(userEmail, subject, html);
-    // console.log('Welcome email sent successfully!');
-  } catch (error) {
-    console.error('Error sending login email:', error);
-  }
+  await sendMail({
+    userEmail: userEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${userEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${userEmail}:`, error);
+}
 };
 
 export const sendResetPasswordOtpEmail = async (firstName: string, userEmail: string, passwordResetOtp: string) => {
@@ -284,11 +350,17 @@ export const sendResetPasswordOtpEmail = async (firstName: string, userEmail: st
   const subject = 'Password Reset Otp!'
 
   try {
-    await sendMail(userEmail, subject, html);
-    // console.log('Welcome email sent successfully!');
-  } catch (error) {
-    console.error('Error sending login email:', error);
-  }
+  await sendMail({
+    userEmail: userEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${userEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${userEmail}:`, error);
+}
 };
 
 export const sendLoginNotificationEmail = async (firstName: string, userEmail: string) => {
@@ -300,11 +372,17 @@ export const sendLoginNotificationEmail = async (firstName: string, userEmail: s
   const subject = 'Login notification!'
 
   try {
-    await sendMail(userEmail, subject, html);
-    // console.log('Welcome email sent successfully!');
-  } catch (error) {
-    console.error('Error sending login email:', error);
-  }
+  await sendMail({
+    userEmail: userEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${userEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${userEmail}:`, error);
+}
 };
 
 export const sendUserVerifiedEmail = async (fullName: string, userEmail: string, verificationCode: string) => {
@@ -316,11 +394,17 @@ export const sendUserVerifiedEmail = async (fullName: string, userEmail: string,
   const subject = 'You have been verified!'
 
   try {
-    await sendMail(userEmail, subject, html);
-    // console.log('Welcome email sent successfully!');
-  } catch (error) {
-    console.error('Error sending login email:', error);
-  }
+  await sendMail({
+    userEmail: userEmail,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${userEmail}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${userEmail}:`, error);
+}
 };
 
 

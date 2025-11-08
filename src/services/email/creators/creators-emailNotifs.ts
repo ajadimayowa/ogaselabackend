@@ -48,11 +48,17 @@ const remoteImages = [
   },
 ];
     try {
-        await sendMail(email, subject, html,remoteImages);
-        console.log('email sent successfully!');
-    } catch (error) {
-        console.error('Error email:', error);
-    }
+  await sendMail({
+    userEmail: email,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${email}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${email}:`, error);
+}
 
 }
 
@@ -85,11 +91,17 @@ const remoteImages = [
   },
 ];
     try {
-        await sendMail(email, subject, html,remoteImages);
-        console.log('email sent successfully!');
-    } catch (error) {
-        console.error('Error email:', error);
-    }
+  await sendMail({
+    userEmail: email,
+    subject,
+    html,        // optional, can be omitted if empty
+    retries: 3,            // number of retry attempts
+    retryDelayMs: 2000     // delay between retries in ms
+  });
+  console.log(`✅ Email sent successfully to ${email}`);
+} catch (error) {
+  console.error(`❌ Failed to send email to ${email}:`, error);
+}
 
 }
 
