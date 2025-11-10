@@ -34,11 +34,17 @@ const sendOrgWelcomeEmail = (_a) => __awaiter(void 0, [_a], void 0, function* ({
     });
     const subject = 'Succesfull Registration.';
     try {
-        yield (0, emailService_1.sendMail)(orgEmail, subject, html);
-        console.log('Welcome email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: orgEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${orgEmail}`);
     }
     catch (error) {
-        console.error('Error sending welcome email:', error);
+        console.error(`❌ Failed to send email to ${orgEmail}:`, error);
     }
 });
 exports.sendOrgWelcomeEmail = sendOrgWelcomeEmail;
@@ -50,11 +56,17 @@ const sendBranchCreationEmail = (nameOfOrg, orgEmail, nameOfDept, currentTime, c
     const html = template({ nameOfOrg, currentTime, nameOfDept, createdByName });
     const subject = 'New Branch Created.';
     try {
-        yield (0, emailService_1.sendMail)(orgEmail, subject, html);
-        console.log('email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: orgEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${orgEmail}`);
     }
     catch (error) {
-        console.error('Error email:', error);
+        console.error(`❌ Failed to send email to ${orgEmail}:`, error);
     }
 });
 exports.sendBranchCreationEmail = sendBranchCreationEmail;
@@ -66,11 +78,17 @@ const sendDeptCreationEmail = (nameOfOrg, orgEmail, nameOfDept, currentTime, cre
     const html = template({ nameOfOrg, currentTime, nameOfDept, createdByName });
     const subject = 'New Department Created.';
     try {
-        yield (0, emailService_1.sendMail)(orgEmail, subject, html);
-        console.log('email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: orgEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${orgEmail}`);
     }
     catch (error) {
-        console.error('Error email:', error);
+        console.error(`❌ Failed to send email to ${orgEmail}:`, error);
     }
 });
 exports.sendDeptCreationEmail = sendDeptCreationEmail;
@@ -82,11 +100,17 @@ const sendRoleCreationEmail = (_a) => __awaiter(void 0, [_a], void 0, function* 
     const html = template({ nameOfOrg, currentTime, nameOfRole });
     const subject = 'New Role Created.';
     try {
-        yield (0, emailService_1.sendMail)(orgEmail, subject, html);
-        console.log('email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: orgEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${orgEmail}`);
     }
     catch (error) {
-        console.error('Error from Brevo email:', error);
+        console.error(`❌ Failed to send email to ${orgEmail}:`, error);
     }
 });
 exports.sendRoleCreationEmail = sendRoleCreationEmail;
@@ -98,11 +122,17 @@ const sendSuperAdminWelcomeEmail = (_a) => __awaiter(void 0, [_a], void 0, funct
     const html = template({ firstName, loginEmail, tempPass, userClass, createdByName, currentTime, nameOfOrg, staffLevel });
     const subject = 'Super Admin Registration.';
     try {
-        yield (0, emailService_1.sendMail)(loginEmail, subject, html);
-        console.log('Welcome email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: loginEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${loginEmail}`);
     }
     catch (error) {
-        console.error('Error sending welcome email:', error);
+        console.error(`❌ Failed to send email to ${loginEmail}:`, error);
     }
 });
 exports.sendSuperAdminWelcomeEmail = sendSuperAdminWelcomeEmail;
@@ -114,11 +144,17 @@ const sendStaffWelcomeEmail = (_a) => __awaiter(void 0, [_a], void 0, function* 
     const html = template({ firstName, loginEmail, tempPass, userClass, currentTime, nameOfOrg, staffLevel });
     const subject = 'Super Admin Registration.';
     try {
-        yield (0, emailService_1.sendMail)(loginEmail, subject, html);
-        console.log('Welcome email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: loginEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${loginEmail}`);
     }
     catch (error) {
-        console.error('Error sending welcome email:', error);
+        console.error(`❌ Failed to send email to ${loginEmail}:`, error);
     }
 });
 exports.sendStaffWelcomeEmail = sendStaffWelcomeEmail;
@@ -130,11 +166,17 @@ const sendWelcomeEmail = (firstName, userEmail, verifyEMailOtpCode) => __awaiter
     const html = template({ firstName, verifyEMailOtpCode });
     const subject = 'Email Verification Code';
     try {
-        yield (0, emailService_1.sendMail)(userEmail, subject, html);
-        console.log('Welcome email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: userEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${userEmail}`);
     }
     catch (error) {
-        console.error('Error sending welcome email:', error);
+        console.error(`❌ Failed to send email to ${userEmail}:`, error);
     }
 });
 exports.sendWelcomeEmail = sendWelcomeEmail;
@@ -146,11 +188,17 @@ const sendProfileUpdateEmail = (fullName, userEmail, verificationCode) => __awai
     const html = template({ fullName, verificationCode });
     const subject = 'Profile updated!';
     try {
-        yield (0, emailService_1.sendMail)(userEmail, subject, html);
-        console.log('Welcome email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: userEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${userEmail}`);
     }
     catch (error) {
-        console.error('Error sending welcome email:', error);
+        console.error(`❌ Failed to send email to ${userEmail}:`, error);
     }
 });
 exports.sendProfileUpdateEmail = sendProfileUpdateEmail;
@@ -162,11 +210,17 @@ const sendPasswordResetEmail = (fullName, userEmail, verificationCode) => __awai
     const html = template({ fullName, verificationCode });
     const subject = 'Request to change password!';
     try {
-        yield (0, emailService_1.sendMail)(userEmail, subject, html);
-        // console.log('Welcome email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: userEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${userEmail}`);
     }
     catch (error) {
-        console.error('Error sending welcome email:', error);
+        console.error(`❌ Failed to send email to ${userEmail}:`, error);
     }
 });
 exports.sendPasswordResetEmail = sendPasswordResetEmail;
@@ -178,11 +232,17 @@ const sendPasswordChangedEmail = (fullName, userEmail, verificationCode) => __aw
     const html = template({ fullName, verificationCode });
     const subject = 'Password Changed!';
     try {
-        yield (0, emailService_1.sendMail)(userEmail, subject, html);
-        console.log('Welcome email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: userEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${userEmail}`);
     }
     catch (error) {
-        console.error('Error sending welcome email:', error);
+        console.error(`❌ Failed to send email to ${userEmail}:`, error);
     }
 });
 exports.sendPasswordChangedEmail = sendPasswordChangedEmail;
@@ -194,11 +254,17 @@ const sendLoginOtpEmail = (firstName, userEmail, loginOtp) => __awaiter(void 0, 
     const html = template({ firstName, loginOtp });
     const subject = 'Login Otp!';
     try {
-        yield (0, emailService_1.sendMail)(userEmail, subject, html);
-        // console.log('Welcome email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: userEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${userEmail}`);
     }
     catch (error) {
-        console.error('Error sending login email:', error);
+        console.error(`❌ Failed to send email to ${userEmail}:`, error);
     }
 });
 exports.sendLoginOtpEmail = sendLoginOtpEmail;
@@ -210,11 +276,17 @@ const sendResetPasswordOtpEmail = (firstName, userEmail, passwordResetOtp) => __
     const html = template({ firstName, passwordResetOtp });
     const subject = 'Password Reset Otp!';
     try {
-        yield (0, emailService_1.sendMail)(userEmail, subject, html);
-        // console.log('Welcome email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: userEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${userEmail}`);
     }
     catch (error) {
-        console.error('Error sending login email:', error);
+        console.error(`❌ Failed to send email to ${userEmail}:`, error);
     }
 });
 exports.sendResetPasswordOtpEmail = sendResetPasswordOtpEmail;
@@ -226,11 +298,17 @@ const sendLoginNotificationEmail = (firstName, userEmail) => __awaiter(void 0, v
     const html = template({ firstName });
     const subject = 'Login notification!';
     try {
-        yield (0, emailService_1.sendMail)(userEmail, subject, html);
-        // console.log('Welcome email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: userEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${userEmail}`);
     }
     catch (error) {
-        console.error('Error sending login email:', error);
+        console.error(`❌ Failed to send email to ${userEmail}:`, error);
     }
 });
 exports.sendLoginNotificationEmail = sendLoginNotificationEmail;
@@ -242,11 +320,17 @@ const sendUserVerifiedEmail = (fullName, userEmail, verificationCode) => __await
     const html = template({ fullName, verificationCode });
     const subject = 'You have been verified!';
     try {
-        yield (0, emailService_1.sendMail)(userEmail, subject, html);
-        // console.log('Welcome email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: userEmail,
+            subject,
+            html, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${userEmail}`);
     }
     catch (error) {
-        console.error('Error sending login email:', error);
+        console.error(`❌ Failed to send email to ${userEmail}:`, error);
     }
 });
 exports.sendUserVerifiedEmail = sendUserVerifiedEmail;

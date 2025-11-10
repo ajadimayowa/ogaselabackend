@@ -24,6 +24,9 @@ const userLoginOtpEmailNotifs_1 = require("../../services/email/ogasela/userLogi
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { fullName, email, phoneNumber, password } = req.body;
+        if (!fullName || !email || !phoneNumber || !password) {
+            return res.status(401).json({ success: false, message: 'Incomplete Data' });
+        }
         let properEmail = email.trim().toLowerCase() || '';
         // Check if user already exists
         const existingUser = yield User_model_1.default.findOne({ "contact.email": properEmail });
@@ -95,6 +98,9 @@ const verifyUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function
 exports.verifyUserEmail = verifyUserEmail;
 const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(401).json({ success: false, message: 'Un Authorized user!' });
+    }
     try {
         const normalizedEmail = email.trim().toLowerCase();
         const user = yield User_model_1.default.findOne({ "contact.email": normalizedEmail });
@@ -190,12 +196,13 @@ exports.verifyLoginOtp = verifyLoginOtp;
 const requestPasswordResetOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email } = req.body;
     const normalizedEmail = email.trim().toLowerCase();
+    console.log('sent email:', normalizedEmail);
     try {
         const user = yield User_model_1.default.findOne({ "contact.email": normalizedEmail });
         if (!user) {
             res.status(404).json({
                 success: false,
-                message: 'Staff with this email does not exist',
+                message: 'User with this email does not exist',
             });
             return;
         }

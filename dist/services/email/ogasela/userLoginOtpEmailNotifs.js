@@ -36,11 +36,18 @@ const sendUserLoginOtpNotificationEmail = (creatorData) => __awaiter(void 0, voi
         },
     ];
     try {
-        yield (0, emailService_1.sendMail)(email, subject, html, remoteImages);
-        console.log('email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: email,
+            subject,
+            html,
+            remoteImages, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${email}`);
     }
     catch (error) {
-        console.error('Error email:', error);
+        console.error(`❌ Failed to send email to ${email}:`, error);
     }
 });
 exports.sendUserLoginOtpNotificationEmail = sendUserLoginOtpNotificationEmail;
@@ -63,11 +70,18 @@ const sendUserLoginNotificationEmail = (creatorData) => __awaiter(void 0, void 0
         },
     ];
     try {
-        yield (0, emailService_1.sendMail)(email, subject, html, remoteImages);
-        console.log('email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: email,
+            subject,
+            html,
+            remoteImages, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${email}`);
     }
     catch (error) {
-        console.error('Error email:', error);
+        console.error(`❌ Failed to send email to ${email}:`, error);
     }
 });
 exports.sendUserLoginNotificationEmail = sendUserLoginNotificationEmail;
@@ -90,11 +104,18 @@ const sendUserPasswordResetNotificationEmail = (creatorData) => __awaiter(void 0
         },
     ];
     try {
-        yield (0, emailService_1.sendMail)(email, subject, html, remoteImages);
-        console.log('email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: email,
+            subject,
+            html,
+            remoteImages, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${email}`);
     }
     catch (error) {
-        console.error('Error email:', error);
+        console.error(`❌ Failed to send email to ${email}:`, error);
     }
 });
 exports.sendUserPasswordResetNotificationEmail = sendUserPasswordResetNotificationEmail;
@@ -117,11 +138,18 @@ const sendUserPasswordResetOtpEmail = (creatorData) => __awaiter(void 0, void 0,
         },
     ];
     try {
-        yield (0, emailService_1.sendMail)(email, subject, html, remoteImages);
-        console.log('email sent successfully!');
+        yield (0, emailService_1.sendMail)({
+            userEmail: email,
+            subject,
+            html,
+            remoteImages, // optional, can be omitted if empty
+            retries: 3, // number of retry attempts
+            retryDelayMs: 2000 // delay between retries in ms
+        });
+        console.log(`✅ Email sent successfully to ${email}`);
     }
     catch (error) {
-        console.error('Error email:', error);
+        console.error(`❌ Failed to send email to ${email}:`, error);
     }
 });
 exports.sendUserPasswordResetOtpEmail = sendUserPasswordResetOtpEmail;

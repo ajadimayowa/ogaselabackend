@@ -28,9 +28,13 @@ export interface IApiResponse<T = any> {
 
 
 // ✅ Register New User
-export const createUser = async (req: Request, res: Response): Promise<void> => {
+export const createUser = async (req: Request, res: Response): Promise<any> => {
   try {
     const { fullName, email, phoneNumber, password } = req.body;
+    if (!fullName || !email || !phoneNumber || !password) {
+      return res.status(401).json({ success: false, message: 'Incomplete Data' })
+    }
+
     let properEmail: string = email.trim().toLowerCase() || ''
 
     // Check if user already exists
@@ -113,6 +117,9 @@ export const verifyUserEmail = async (req: Request, res: Response): Promise<void
 
 export const loginUser = async (req: Request, res: Response): Promise<any> => {
   const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(401).json({ success: false, message: 'Un Authorized user!' })
+  }
 
   try {
     const normalizedEmail = email.trim().toLowerCase();
@@ -224,6 +231,7 @@ export const requestPasswordResetOtp = async (req: Request, res: Response) => {
 
   const { email } = req.body;
   const normalizedEmail = email.trim().toLowerCase();
+  console.log('sent email:', normalizedEmail)
 
   try {
     const user = await UserModel.findOne({ "contact.email": normalizedEmail });
@@ -231,7 +239,7 @@ export const requestPasswordResetOtp = async (req: Request, res: Response) => {
     if (!user) {
       res.status(404).json({
         success: false,
-        message: 'Staff with this email does not exist',
+        message: 'User with this email does not exist',
       });
       return;
     }

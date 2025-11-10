@@ -2,6 +2,7 @@ import { Router } from 'express';
 // import { register, login } from '../controllers/auth.controller';
 import { createUser,loginUser,verifyUserEmail,verifyLoginOtp, requestPasswordResetOtp,resetUserPasswordWithOtp } from '../controllers/auth/user';
 import { verifyToken } from '../middleware/auth.middleware';
+import { verifyTurnstile } from '../middleware/verifyTurnstile';
 
 const router = Router();
 

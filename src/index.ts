@@ -48,9 +48,12 @@ app.use(express.json());
 const apiPrefix = '/api/v1/';
 
 // Routes
+app.use(apiPrefix, authRoutes);
+app.use(apiPrefix,homeRoutes);
+
 app.use(apiPrefix,categoryRoutes);
 app.use(apiPrefix,sliderRoutes);
-app.use(apiPrefix,homeRoutes);
+
 app.use(apiPrefix,adRoutes);
 
 app.use(apiPrefix,userRoutes);
@@ -62,7 +65,7 @@ app.use(apiPrefix, branchRoutes);
 app.use(apiPrefix, departmentRoutes);
 app.use(apiPrefix, roleRoutes);
 app.use(apiPrefix, staffRoutes);
-app.use(apiPrefix, authRoutes);
+
 app.use(apiPrefix, userRoleRoutes);
 app.use(apiPrefix, stateRoutes);
 app.use(apiPrefix, permissionRoutes);
