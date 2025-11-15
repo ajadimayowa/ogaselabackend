@@ -30,7 +30,8 @@ export interface IApiResponse<T = any> {
 // ✅ Register New User
 export const createUser = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { fullName, email, phoneNumber, password } = req.body;
+    const { fullName, email, phoneNumber, password,isAdmin } = req.body;
+    console.log({seeAd:isAdmin})
     if (!fullName || !email || !phoneNumber || !password) {
       return res.status(401).json({ success: false, message: 'Incomplete Data' })
     }
@@ -57,6 +58,7 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
       profile: { fullName, firstName, lastName, password: hashedPassword },
       contact: { email: properEmail, phoneNumber },
       emailVerificationToken: emailVerificationCode,
+      isAdmin:isAdmin,
       emailVerificationExpires,
     });
 

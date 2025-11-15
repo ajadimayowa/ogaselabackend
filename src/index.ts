@@ -25,6 +25,7 @@ import groupRoutes from './routes/group-routes/groupRoutes.routes';
 import memberRoutes from './routes/customer-routes/customer.routes';
 import businessRuleRoutes from './routes/business/business-rule.routes';
 import loanRoutes from './routes/loanRoutes/loan.routes'
+import adminRoutes from './routes/admin/ads/adminAd.routes'
 
 dotenv.config();
 
@@ -73,6 +74,9 @@ app.use(apiPrefix, groupRoutes);
 app.use(apiPrefix, memberRoutes);
 app.use(apiPrefix, businessRuleRoutes);
 app.use(apiPrefix, loanRoutes);
+
+
+app.use(apiPrefix, adminRoutes);
 
 
 

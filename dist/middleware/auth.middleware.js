@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isCreator = exports.isSuperAdmin = exports.verifyUserToken = exports.verifyRootAdminToken = exports.verifyToken = void 0;
+exports.isCreator = exports.verifyIsAdmin = exports.isSuperAdmin = exports.verifyUserToken = exports.verifyRootAdminToken = exports.verifyToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const Staff_1 = __importDefault(require("../models/Staff"));
 const Creator_model_1 = require("../models/Creator.model");
@@ -107,6 +107,16 @@ const isSuperAdmin = (req, res, next) => {
     next();
 };
 exports.isSuperAdmin = isSuperAdmin;
+const verifyIsAdmin = (req, res, next) => {
+    const { adminPass } = req.body;
+    if (adminPass !== process.env.ADMIN_PASS) {
+        res.status(403).json({ success: false, message: 'Not An Admin!' });
+        return;
+    }
+    ;
+    next();
+};
+exports.verifyIsAdmin = verifyIsAdmin;
 const isCreator = (req, res, next) => {
     const { creatorPass } = req.body;
     if (creatorPass !== process.env.CREATOR_PASS) {

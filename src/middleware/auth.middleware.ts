@@ -103,6 +103,16 @@ export const isSuperAdmin = (req: Request, res: Response, next: NextFunction) =>
   next();
 };
 
+export const verifyIsAdmin = (req: Request, res: Response, next: NextFunction) => {
+  const {adminPass} = req.body
+  
+  if (adminPass!==process.env.ADMIN_PASS) {
+    res.status(403).json({success:false, message: 'Not An Admin!' }) 
+    return
+};
+  next();
+};
+
 export const isCreator = (req: Request, res: Response, next: NextFunction) => {
   const {creatorPass} = req.body;
   if (creatorPass !== process.env.CREATOR_PASS) {

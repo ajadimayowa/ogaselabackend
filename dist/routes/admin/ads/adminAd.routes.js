@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_middleware_1 = require("../../../middleware/auth.middleware");
+const adminAd_controller_1 = require("../../../controllers/admin/ad/adminAd.controller");
+const router = (0, express_1.Router)();
+router.patch("/admin/ads/activate/:id", auth_middleware_1.verifyIsAdmin, adminAd_controller_1.activateAd);
+// router.get('/user/:id',verifyUserToken,getUserById);
+// router.put("/user/update-businessinfo/:userId", verifyUserToken, updateBusinessInfo);
+// router.put("/user/kyc/:userId", verifyUserToken, doKyc);
+// router.put("/user/profile/:userId", verifyUserToken,uploadAdImages.single("profilePicUrl"), updateProfile);
+exports.default = router;

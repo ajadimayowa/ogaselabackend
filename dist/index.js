@@ -27,6 +27,7 @@ const groupRoutes_routes_1 = __importDefault(require("./routes/group-routes/grou
 const customer_routes_1 = __importDefault(require("./routes/customer-routes/customer.routes"));
 const business_rule_routes_1 = __importDefault(require("./routes/business/business-rule.routes"));
 const loan_routes_1 = __importDefault(require("./routes/loanRoutes/loan.routes"));
+const adminAd_routes_1 = __importDefault(require("./routes/admin/ads/adminAd.routes"));
 dotenv_1.default.config();
 // Connect to DB
 (0, db_1.default)().catch((err) => {
@@ -64,5 +65,6 @@ app.use(apiPrefix, groupRoutes_routes_1.default);
 app.use(apiPrefix, customer_routes_1.default);
 app.use(apiPrefix, business_rule_routes_1.default);
 app.use(apiPrefix, loan_routes_1.default);
+app.use(apiPrefix, adminAd_routes_1.default);
 const PORT = process.env.PORT || 5000; // 5000 for local, dynamic PORT for prod
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

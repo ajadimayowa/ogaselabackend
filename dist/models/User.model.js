@@ -42,6 +42,7 @@ const userSchema = new mongoose_1.Schema({
         password: { type: String, required: true },
         profilePicUrl: { type: String },
         isVerified: { type: Boolean, default: false },
+        bio: { type: String }
     },
     contact: {
         email: { type: String, required: true, unique: true },
@@ -55,6 +56,7 @@ const userSchema = new mongoose_1.Schema({
     },
     ads: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: "Ad" }],
     isSeller: { type: Boolean, default: false },
+    isAdmin: { type: Boolean, default: false },
     isEmailVerified: { type: Boolean, default: false },
     isPhoneVerified: { type: Boolean, default: false },
     emailVerificationToken: { type: String },
@@ -66,9 +68,17 @@ const userSchema = new mongoose_1.Schema({
     loginOtpExpires: { type: Date },
     resetPasswordOtpExpires: { type: Date },
     isActive: { type: Boolean, default: true },
-    storeName: { type: String },
-    rating: { type: Number, default: 0, min: 0, max: 5 },
-    totalSales: { type: Number, default: 0 },
+    businessDetails: {
+        name: { type: String },
+        address: { type: String },
+        phoneNumber: { type: String },
+        regNumber: { type: String },
+        certificate: { type: String },
+        isVerified: { type: String },
+        storeName: { type: String },
+        rating: { type: Number, default: 0, min: 0, max: 5 },
+        totalSales: { type: Number, default: 0 },
+    }
 }, {
     timestamps: true,
     toJSON: {

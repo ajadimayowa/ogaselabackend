@@ -3,9 +3,14 @@ import { Router } from 'express';
 import { createStaff, getStaffProfileByStaffId, getStaffs, registerSuperAdmin } from '../../controllers/staff/staff-controllers';
 import { isCreator, isSuperAdmin, verifyRootAdminToken, verifyToken, verifyUserToken } from '../../middleware/auth.middleware';
 import { loginStaff,requestPasswordResetOtp,resetStaffPasswordWithOtp,verifyLoginOtp} from '../../controllers/auth/staff';
-import { getUserById } from '../../controllers/user/user.controller';
+import { doKyc, getUserById, updateBusinessInfo, updateProfile } from '../../controllers/user/user.controller';
+import upload from '../../middleware/multerMemory';
+import uploadAdImages from '../../middleware/upload';
 
 const router = Router();
 router.get('/user/:id',verifyUserToken,getUserById);
+router.put("/user/update-businessinfo/:userId", verifyUserToken, updateBusinessInfo);
+router.put("/user/kyc/:userId", verifyUserToken, doKyc);
+router.put("/user/profile/:userId", verifyUserToken,uploadAdImages.single("profilePicUrl"), updateProfile);
 
 export default router;

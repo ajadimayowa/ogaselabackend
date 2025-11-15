@@ -28,10 +28,16 @@ const fetchHomepageData = (state) => __awaiter(void 0, void 0, void 0, function*
         .select("name slug image id")
         .sort({ createdAt: -1 })
         .limit(8);
-    const recentlyPosted = yield Ad_model_1.default.find({ 'location.state': state })
+    const recentlyPosted = yield Ad_model_1.default.find({
+        'location.state': state,
+        isActive: true
+    })
         .sort({ createdAt: -1 })
         .limit(8);
-    const topRatedSellers = yield Ad_model_1.default.find({ 'location.state': state })
+    const topRatedSellers = yield Ad_model_1.default.find({
+        'location.state': state,
+        isActive: true
+    })
         .sort({ views: -1 })
         .limit(8);
     const bestSellers = yield User_model_1.default.find({ 'location.state': state })
@@ -50,20 +56,20 @@ const fetchHomepageDataNoState = () => __awaiter(void 0, void 0, void 0, functio
         .limit(8);
     const recentlyPosted = yield Ad_model_1.default.find({ isActive: true })
         .sort({ createdAt: -1 })
-        .limit(8);
+        .limit(16);
     const topRatedSellers = yield Ad_model_1.default.find({ isActive: true })
         .sort({ views: -1 })
-        .limit(8);
+        .limit(16);
     const bestSellers = yield User_model_1.default.find({ isActive: true })
         .sort({ totalSales: -1 })
-        .limit(10)
+        .limit(16)
         .select("storeName totalSales profilePic");
     return { homeSliderObjects, categories, recentlyPosted, topRatedSellers, bestSellers };
 });
 const getHomePage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { lat, lon } = req.query;
-        console.log('seecord', lat, lon);
+        //  console.log('seecord',lat,lon);
         let state = null;
         if (lat && lon && typeof lat === "string" && typeof lon === "string") {
             // Reverse geocode using Google API

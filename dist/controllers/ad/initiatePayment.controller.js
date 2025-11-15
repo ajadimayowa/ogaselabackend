@@ -18,9 +18,9 @@ const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET;
 // Define price list with explicit typing
 const promotionPrices = {
     free: 0,
-    basic: 500,
-    standard: 1000,
-    premium: 2000,
+    basic: 2000,
+    standard: 7000,
+    premium: 30000,
 };
 const initiateAdPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;

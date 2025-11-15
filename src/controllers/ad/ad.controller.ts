@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import AdModel from "../../models/Ad.model";
 import UserModel from "../../models/User.model";
 import Category from "../../models/Category.model";
+import axios from "axios";
 
 /**
  * @desc Create a new ad
@@ -9,7 +10,8 @@ import Category from "../../models/Category.model";
  */
 export const createAd = async (req: Request, res: Response): Promise<void> => {
   try {
-    const images = (req.files as any)
+    const images = (req.files as any);
+
     const {
       title,
       description,
@@ -23,77 +25,67 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       city,
       location,
       seller,
-      promotionPlan, // 👈 Added
-      paymentReference, // 👈 Added (after Paystack initialization)
+      promotionPlan,
+      paymentReference,
     } = req.body;
 
-    // ✅ Validate required fields
-    if (!title || !description || !price|| !condition || !seller || !category || !promotionPlan) {
+    if (!title || !description || !price || !condition || !seller || !category || !promotionPlan) {
       res.status(400).json({ success: false, message: "Missing required fields" });
       return;
     }
 
-    // ✅ Verify category exists
-    const categoryExists = await Category.findById(category);
-    if (!categoryExists) {
-      res.status(404).json({ success: false, message: "Category not found" });
-      return;
-    }
-
-    // ✅ Verify seller exists
-    const user = await UserModel.findById(seller);
-    if (!user) {
-      res.status(404).json({ success: false, message: "Seller not found" });
-      return;
-    }
-
-    // ✅ Validate promotion type
     const validPromotionPlans = ["free", "basic", "standard", "premium"];
-    if (!promotionPlan || !validPromotionPlans.includes(promotionPlan)) {
-      res.status(400).json({ success: false, message: "Invalid or missing promotion type" });
+    if (!validPromotionPlans.includes(promotionPlan)) {
+      res.status(400).json({ success: false, message: "Invalid promotion plan" });
       return;
     }
 
-    // ✅ Set paymentCompleted based on plan type
-    const paymentCompleted = promotionPlan === "free" ? true : false;
+    // Payment logic
+    const paymentCompleted = promotionPlan === "free";
 
-    // ✅ Create new Ad with promotion details
     const newAd = await AdModel.create({
       title,
       description,
       price,
-      images: images.map((gig: any) => gig?.location),
+      images: images.map((img: any) => img?.location),
       sellerName,
       reviewCount,
       category,
-      isActive:true,
       subCategory,
       condition,
-      location:{
-        state:state,
-        city:city,
-        address:location
+      location: {
+        state,
+        city,
+        address: location,
       },
       seller,
+
+      // 🚨 Ads are inactive until admin + payment
+      isActive: false,
+      adminReviewed: false,
+
       promotionType: {
         plan: promotionPlan,
         paymentCompleted,
         paymentReference: paymentReference || null,
+        startDate: null,
+        endDate: null,
       },
     });
 
     res.status(201).json({
       success: true,
-      message: paymentCompleted
-        ? "Ad created successfully (Free Plan)"
-        : "Ad created successfully. Awaiting payment confirmation.",
+      message:
+        paymentCompleted
+          ? "Ad created successfully. Awaiting admin review."
+          : "Ad created successfully. Awaiting payment & admin review.",
       data: newAd,
     });
   } catch (error: any) {
     res.status(500).json({
       success: false,
       message: "Error creating ad",
-      error: error.message || error,
+      error: error.message,
     });
   }
 };
@@ -110,11 +102,25 @@ export const getAds = async (req: Request, res: Response): Promise<void> => {
       search = "",
       category,
       seller,
-      sortBy = "createdAt", // default sort
-      order = "desc",       // optional: "asc" or "desc"
+      sortBy = "createdAt",
+      order = "desc",
+      isActive,
+      isPaymentCompleted, // 👈 NEW
     } = req.query;
 
     const query: any = {};
+
+    // ⭐ DEFAULT BEHAVIOUR → Only active ads
+    if (isActive === "true") query.isActive = true;
+    else if (isActive === "false") query.isActive = false;
+    else query.isActive = true; // default
+
+    // ⭐ Filter by Payment Completed
+    if (isPaymentCompleted === "true") {
+      query["promotionType.paymentCompleted"] = true;
+    } else if (isPaymentCompleted === "false") {
+      query["promotionType.paymentCompleted"] = false;
+    }
 
     // 🔍 Search by title or seller name
     if (search) {
@@ -124,20 +130,15 @@ export const getAds = async (req: Request, res: Response): Promise<void> => {
       ];
     }
 
-    if (category) {
-      query.category = category;
-    }
-    if (seller) {
-      query.seller = seller;
-    }
+    if (category) query.category = category;
+    if (seller) query.seller = seller;
 
     const skip = (Number(page) - 1) * Number(limit);
 
-    // ⚙️ Sorting options
     const sortOptions: Record<string, 1 | -1> = {};
     if (sortBy === "price") sortOptions.price = order === "asc" ? 1 : -1;
     else if (sortBy === "city") sortOptions["location.city"] = order === "asc" ? 1 : -1;
-    else sortOptions.createdAt = order === "asc" ? 1 : -1; // default newest first
+    else sortOptions.createdAt = order === "asc" ? 1 : -1;
 
     // 🧮 Total count
     const totalAds = await AdModel.countDocuments(query);
@@ -146,7 +147,6 @@ export const getAds = async (req: Request, res: Response): Promise<void> => {
     const ads = await AdModel.find(query)
       .populate("category", "name")
       .populate("seller", "profile.fullName profile.profilePicUrl")
-      .populate("location")
       .sort(sortOptions)
       .skip(skip)
       .limit(Number(limit));
@@ -244,5 +244,75 @@ export const deleteAd = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error deleting ad", error });
+  }
+};
+
+export const updatePromotionPayment = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { adId, reference } = req.body;
+
+    if (!adId || !reference) {
+      return res.status(400).json({
+        message: "adId and reference are required",
+      });
+    }
+
+    const ad = await AdModel.findById(adId);
+    if (!ad) {
+      return res.status(404).json({ message: "Ad not found" });
+    }
+
+    // 🔍 1. VERIFY PAYMENT WITH PAYSTACK
+    const paystackRes = await axios.get(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET}`,
+        },
+      }
+    );
+
+    const verification = paystackRes.data;
+
+    if (!verification.status || verification.data.status !== "success") {
+      return res.status(400).json({
+        success: false,
+        message: "Payment not verified",
+        paystackResponse: verification,
+      });
+    }
+
+    // Optional validation: Ensure amount matches expected price
+    const paidAmount = verification.data.amount / 100; // Paystack stores in kobo
+    const expectedAmount = ad.promotionType.price;
+
+    if (paidAmount < expectedAmount) {
+      return res.status(400).json({
+        success: false,
+        message: "Incorrect amount paid. Payment rejected.",
+        expectedAmount,
+        paidAmount,
+      });
+    }
+
+    // 🔐 2. SAVE payment as verified
+    ad.promotionType.paymentCompleted = true;
+    ad.promotionType.paymentReference = reference;
+
+    await ad.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Payment verified successfully. Awaiting admin review.",
+      payload: ad,
+    });
+
+  } catch (error: any) {
+    console.error("PAYMENT VERIFY ERROR:", error.response?.data || error);
+    return res.status(500).json({
+      success: false,
+      message: "Error verifying payment",
+      error: error.response?.data || error.message,
+    });
   }
 };

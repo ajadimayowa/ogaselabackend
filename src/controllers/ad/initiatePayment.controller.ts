@@ -9,9 +9,9 @@ type PromotionPlan = "free" | "basic" | "standard" | "premium";
 // Define price list with explicit typing
 const promotionPrices: Record<PromotionPlan, number> = {
   free: 0,
-  basic: 500,
-  standard: 1000,
-  premium: 2000,
+  basic: 2000,
+  standard: 7000,
+  premium: 30000,
 };
 
 export const initiateAdPayment = async (req: Request, res: Response):Promise<any> => {

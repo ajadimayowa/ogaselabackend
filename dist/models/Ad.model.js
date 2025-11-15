@@ -63,10 +63,11 @@ const adSchema = new mongoose_1.Schema({
         address: { type: String },
     },
     seller: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
-    isActive: { type: Boolean, default: true },
     isSold: { type: Boolean, default: false },
     views: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
+    adminReviewed: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: false }, // default changed
     promotionType: {
         plan: {
             type: String,
@@ -75,11 +76,11 @@ const adSchema = new mongoose_1.Schema({
         },
         price: { type: Number, required: true, default: 0 },
         durationInDays: { type: Number, default: 7 },
-        startDate: { type: Date, default: Date.now },
-        endDate: { type: Date },
+        startDate: { type: Date, default: null }, // 🚨 no auto-start
+        endDate: { type: Date, default: null }, // 🚨 no auto-end
         paymentCompleted: { type: Boolean, default: false },
         paymentReference: { type: String },
-    }
+    },
 }, {
     timestamps: true,
     toJSON: {
@@ -95,9 +96,9 @@ const adSchema = new mongoose_1.Schema({
 // 🔹 Promotion Pricing Logic
 const PROMOTION_PRICING = {
     free: { price: 0, durationInDays: 7 },
-    basic: { price: 500, durationInDays: 14 },
-    standard: { price: 1000, durationInDays: 30 },
-    premium: { price: 2000, durationInDays: 60 },
+    basic: { price: 3000, durationInDays: 14 },
+    standard: { price: 10000, durationInDays: 31 },
+    premium: { price: 50000, durationInDays: 60 },
 };
 // 🔸 Pre-save hook to auto-assign promo details
 adSchema.pre("save", function (next) {
@@ -106,12 +107,6 @@ adSchema.pre("save", function (next) {
     if (promo) {
         ad.promotionType.price = promo.price;
         ad.promotionType.durationInDays = promo.durationInDays;
-        ad.promotionType.startDate = ad.promotionType.startDate || new Date();
-        ad.promotionType.endDate = new Date(ad.promotionType.startDate.getTime() + promo.durationInDays * 24 * 60 * 60 * 1000);
-        // Only mark free plan as completed immediately
-        if (ad.promotionType.plan === "free") {
-            ad.promotionType.paymentCompleted = true;
-        }
     }
     next();
 });

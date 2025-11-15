@@ -23,7 +23,8 @@ const userLoginOtpEmailNotifs_1 = require("../../services/email/ogasela/userLogi
 // ✅ Register New User
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { fullName, email, phoneNumber, password } = req.body;
+        const { fullName, email, phoneNumber, password, isAdmin } = req.body;
+        console.log({ seeAd: isAdmin });
         if (!fullName || !email || !phoneNumber || !password) {
             return res.status(401).json({ success: false, message: 'Incomplete Data' });
         }
@@ -45,6 +46,7 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             profile: { fullName, firstName, lastName, password: hashedPassword },
             contact: { email: properEmail, phoneNumber },
             emailVerificationToken: emailVerificationCode,
+            isAdmin: isAdmin,
             emailVerificationExpires,
         });
         // Send email verification

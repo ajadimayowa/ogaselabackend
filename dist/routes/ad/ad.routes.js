@@ -13,9 +13,10 @@ router.get("/ads", ad_controller_1.getAds);
 // GET - Single ad by ID
 router.get("/ad/:id", ad_controller_1.getAdById);
 // PUT - Update ad
-router.put("/:id", ad_controller_1.updateAd);
+router.put("/:id", auth_middleware_1.verifyUserToken, ad_controller_1.updateAd);
 // DELETE - Remove ad
-router.delete("/:id", ad_controller_1.deleteAd);
+router.delete("/:id", auth_middleware_1.verifyUserToken, ad_controller_1.deleteAd);
+router.post("/ad/update-payment", auth_middleware_1.verifyUserToken, ad_controller_1.updatePromotionPayment);
 router.post("/initiate-payment", initiatePayment_controller_1.initiateAdPayment);
 // router.post("/paystack/webhook", paystackWebhook);
 exports.default = router;

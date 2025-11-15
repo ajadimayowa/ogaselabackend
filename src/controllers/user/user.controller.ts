@@ -59,7 +59,7 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
             return;
         }
 
-       
+
         const user = await UserModel.findById(id).select("-profile.password");
         if (!user) {
             res.status(404).json({ message: "User not found" });
@@ -133,6 +133,104 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
             error,
         });
     }
+};
+
+export const updateProfile = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { userId } = req.params;
+    const { bio,homeAddress } = req.body;
+
+    console.log({ receivedUserId: userId, uploadedFile: req.file });
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ✅ Only allow updating bio and profilePicUrl
+    if (bio !== undefined) {
+      user.profile.bio = bio;
+    }
+
+    if (homeAddress !== undefined) {
+      user.contact.address = homeAddress;
+    }
+
+    // ✅ Handle uploaded image via multer-s3
+    if (req.file && (req.file as any).location) {
+      user.profile.profilePicUrl = (req.file as any).location;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      profile: {
+        bio: user.profile.bio,
+        homeAddress: user.contact.address,
+        profilePicUrl: user.profile.profilePicUrl,
+      },
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+export const doKyc = async (req: Request, res: Response): Promise<any> => {
+    const userId = req.path;
+    const { idCardNumber, idCardPhoto } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+        return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    user.kyc = {
+        idCardNumber: idCardNumber ?? user.kyc?.idCardNumber,
+        idCardPhoto: idCardPhoto ?? user.kyc?.idCardPhoto,
+        isKycCompleted: true,
+        verifiedAt: new Date(),
+    };
+
+    await user.save();
+
+    return res.status(200).json({
+        success: true,
+        message: "KYC completed successfully",
+        payload: user.kyc,
+    });
+};
+
+export const updateBusinessInfo = async (req: Request, res: Response): Promise<any> => {
+    const userId = req?.path; // assuming you attach user to req in auth middleware
+    const { name, address, phoneNumber, regNumber, certificate, storeName } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+        return res.status(404).json({ message: "User not found" });
+    }
+
+    user.businessDetails = {
+        ...user.businessDetails,
+        name: name ?? user.businessDetails?.name,
+        address: address ?? user.businessDetails?.address,
+        phoneNumber: phoneNumber ?? user.businessDetails?.phoneNumber,
+        regNumber: regNumber ?? user.businessDetails?.regNumber,
+        certificate: certificate ?? user.businessDetails?.certificate,
+        storeName: storeName ?? user.businessDetails?.storeName,
+        isVerified: user.businessDetails?.isVerified ?? false,
+        rating: user.businessDetails?.rating ?? 0,
+        totalSales: user.businessDetails?.totalSales ?? 0,
+    };
+
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Business information updated successfully",
+        payload: user.businessDetails,
+    });
 };
 
 // Delete user

@@ -7,6 +7,7 @@ import {
     getAdById,
     updateAd,
     deleteAd,
+    updatePromotionPayment,
 
 } from "../../controllers/ad/ad.controller";
 import { verifyUserToken } from "../../middleware/auth.middleware";
@@ -26,10 +27,12 @@ router.get("/ad/:id", getAdById);
 
 
 // PUT - Update ad
-router.put("/:id", updateAd);
+router.put("/:id",verifyUserToken, updateAd);
 
 // DELETE - Remove ad
-router.delete("/:id", deleteAd);
+router.delete("/:id",verifyUserToken, deleteAd);
+
+router.post("/ad/update-payment",verifyUserToken, updatePromotionPayment);
 
 router.post("/initiate-payment", initiateAdPayment);
 // router.post("/paystack/webhook", paystackWebhook);

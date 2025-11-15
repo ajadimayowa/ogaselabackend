@@ -5,7 +5,7 @@ export interface IUser extends Document {
         fullName: string;
         firstName: string;
         lastName: string;
-        bio: string;
+        bio?: string;
         password: string;
         profilePicUrl?: string;
         isVerified: boolean;
@@ -13,7 +13,7 @@ export interface IUser extends Document {
     contact: {
         email: string;
         phoneNumber: string;
-        address:string
+        address: string
     };
     kyc: {
         idCardNumber?: string;
@@ -23,6 +23,7 @@ export interface IUser extends Document {
     };
     ads: mongoose.Types.ObjectId[];
     isSeller: boolean;
+    isAdmin: boolean;
     isEmailVerified: boolean;
     isPhoneVerified: boolean;
     emailVerificationToken?: string;
@@ -33,11 +34,19 @@ export interface IUser extends Document {
     loginOtpExpires?: Date;
     resetPasswordOtp: string | undefined;
     resetPasswordOtpExpires: Date;
-
     isActive: boolean;
-    storeName?: string;
-    rating?: number;
-    totalSales?: number;
+
+    businessDetails?: {
+        name: string
+        address: string
+        phoneNumber: string
+        regNumber: string
+        certificate: string
+        isVerified: boolean
+        storeName?: string;
+        rating?: number;
+        totalSales?: number;
+    }
 }
 
 const userSchema = new Schema<IUser>(
@@ -49,11 +58,12 @@ const userSchema = new Schema<IUser>(
             password: { type: String, required: true },
             profilePicUrl: { type: String },
             isVerified: { type: Boolean, default: false },
+            bio:{type: String }
         },
         contact: {
             email: { type: String, required: true, unique: true },
             phoneNumber: { type: String, required: true, unique: true },
-            address: { type: String},
+            address: { type: String },
         },
         kyc: {
             idCardNumber: { type: String },
@@ -62,6 +72,7 @@ const userSchema = new Schema<IUser>(
         },
         ads: [{ type: mongoose.Schema.Types.ObjectId, ref: "Ad" }],
         isSeller: { type: Boolean, default: false },
+        isAdmin: { type: Boolean, default: false },
         isEmailVerified: { type: Boolean, default: false },
         isPhoneVerified: { type: Boolean, default: false },
         emailVerificationToken: { type: String },
@@ -74,9 +85,19 @@ const userSchema = new Schema<IUser>(
         resetPasswordOtpExpires: { type: Date },
 
         isActive: { type: Boolean, default: true },
-        storeName: { type: String },
-        rating: { type: Number, default: 0, min: 0, max: 5 },
-        totalSales: { type: Number, default: 0 },
+
+        businessDetails: {
+            name: { type: String },
+            address: { type: String },
+            phoneNumber: { type: String },
+            regNumber: { type: String },
+            certificate: { type: String },
+            isVerified: { type: String },
+            storeName: { type: String },
+            rating: { type: Number, default: 0, min: 0, max: 5 },
+            totalSales: { type: Number, default: 0 },
+        }
+
     },
     {
         timestamps: true,
